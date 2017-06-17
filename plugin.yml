@@ -1,0 +1,17 @@
+name: NavyCraft
+main: com.maximuspayne.navycraft.NavyCraft
+version: 2.0.1-SNAPSHOT
+authors: [Yogoda, SycoPrime, Maximuspayne]
+depend: [WorldGuard,WorldEdit,Essentials]
+
+commands:
+   navycraft:
+      description: Ship and other vehicle based commands
+      usage:
+           /<command>
+   ship:
+      description: Ship
+   aircraft:
+      description: Aircraft
+   submarine:
+      description: Submarine
