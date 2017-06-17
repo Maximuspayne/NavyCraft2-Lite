@@ -12,3 +12,6 @@ This version features a better configuration setup. On first time run, the plugi
 
 Follow the latest releases at my SpigotMC page
 https://www.spigotmc.org/resources/navycraft.42297/
+
+You can download the resource packs and some of the old worlds from the old NBZ to help your setup here...
+http://navalbattlezone.com/downloads/
