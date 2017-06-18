@@ -273,14 +273,14 @@ public class CraftBuilder {
 		if(craft.type.canDive || craft.type.canNavigate){
 
 			//remove air
-			for(int x=0;x<craft.sizeX;x++){
+			/*for(int x=0;x<craft.sizeX;x++){
 				for(int z=0;z<craft.sizeZ;z++){
 					for(int y=0;y<craft.sizeY;y++){
 						if(craft.matrix[x][y][z]== 0)
 							craft.matrix[x][y][z] = -1;
 					}
 				}
-			}
+			}*/
 
 			blocksStack = new Stack<BlockLoc>();
 
