@@ -87,7 +87,8 @@ public class PermissionInterface {
 				}
 					
 			}
+			return false;
 		}
-		return false;
+		return true;
 	}
 }

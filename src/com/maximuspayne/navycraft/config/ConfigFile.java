@@ -30,7 +30,7 @@ public class ConfigFile {
 		ConfigSettings.put("ForbiddenBlocks", "29,33,34,36,52,90,95,97,116,119,120,130,137,138,145,146");
 		ConfigSettings.put("DisableHyperSpaceField", "false");
 		
-		ConfigSettings.put("EnabledWorlds", "world");
+		ConfigSettings.put("EnabledWorlds", "null");
 
 		
 		ConfigComments.put("CraftReleaseDelay", "<Number:15> The amount of time between when a user exists a craft and when" +
@@ -55,6 +55,7 @@ public class ConfigFile {
 		ConfigComments.put("ForbiddenBlocks", "Blocks that prevent craft from being created if they are anywhere in the craft" + 
 				" leave 'null' for none.");
 		ConfigComments.put("DisableHyperSpaceField", "Prevents the hyperspace field blocks from appearing.");
+		ConfigComments.put("EnabledWorlds", "Defines which worlds the plugin's weapons will funciton in. Leave as null for all.");
 				
 		NavyCraft.instance.configFile = this;
 		
