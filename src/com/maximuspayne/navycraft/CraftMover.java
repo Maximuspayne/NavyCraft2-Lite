@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
 
 import org.bukkit.ChatColor;
@@ -26,8 +25,6 @@ import org.bukkit.block.Dropper;
 import org.bukkit.block.Furnace;
 import org.bukkit.block.Hopper;
 import org.bukkit.block.Sign;
-import org.bukkit.craftbukkit.v1_11_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_11_R1.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -45,10 +42,6 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import net.ess3.api.MaxMoneyException;
-import net.minecraft.server.v1_11_R1.EntityHuman;
-import net.minecraft.server.v1_11_R1.EntityTracker;
-import net.minecraft.server.v1_11_R1.EntityTrackerEntry;
-import net.minecraft.server.v1_11_R1.WorldServer;
 
 public class CraftMover {
 	private Craft craft;
@@ -986,7 +979,7 @@ public class CraftMover {
 		}
 	}
 
-	public static void updateEntity(Entity entity, List<Player> observers) {
+/*	public static void updateEntity(Entity entity, List<Player> observers) {
 
 		World world = entity.getWorld();
 		WorldServer worldServer = ((CraftWorld) world).getHandle();
@@ -1010,7 +1003,7 @@ public class CraftMover {
 		}
 
 		return nsmPlayers;
-	}
+	}*/
 
 	public void move(int dx, int dy, int dz) {
 		if (!((dx == 0) && (dy == 0) && (dz == 0))) {
@@ -1410,11 +1403,11 @@ public class CraftMover {
 							p.sendMessage("Essentials Economy error");
 							return;
 						}
-						if (ess.getUser(p).canAfford(new BigDecimal(craft.vehicleCost))) {
+						if (!PermissionInterface.CheckQuietPerm(p, "navycraft.free") && ess.getUser(p).canAfford(new BigDecimal(craft.vehicleCost))) {
 							p.sendMessage("Vehicle purchased.");
 							ess.getUser(p).takeMoney(new BigDecimal(craft.vehicleCost));
 
-						} else if (p.isOp()) {
+						} else if (PermissionInterface.CheckQuietPerm(p, "navycraft.free")) {
 							p.sendMessage("Vehicle given freely to OP!");
 						} else {
 							p.sendMessage(ChatColor.RED + "You cannot afford this vehicle, destroying vehicle.");
@@ -1724,18 +1717,11 @@ public class CraftMover {
 		}
 
 		if (craft.doCost) {
-			if (craft.type.name.equalsIgnoreCase("dd-atlantis")) {
+			if (craft.type.discount == 100) 
 				craft.vehicleCost = 0;
-			} else if (craft.type.name.equalsIgnoreCase("uboat-ii")) {
-				craft.vehicleCost = craft.vehicleCost / 2;
-			} else if (craft.type.name.equalsIgnoreCase("pt-boat")) {
-				craft.vehicleCost = craft.vehicleCost / 2;
-			} else if (craft.type.name.equalsIgnoreCase("at-6")) {
-				craft.vehicleCost = 0;
-			} else if (craft.type.name.equalsIgnoreCase("f4f-wildcat")) {
-				craft.vehicleCost = 0;
-			}
-
+			else if(craft.type.discount > 0)
+				craft.vehicleCost = (int)((float)craft.vehicleCost * (float)craft.type.discount * .01f);
+			
 			if (NavyCraft.checkSpawnRegion(craft.getLocation())) {
 				if (craft.captainName != null) {
 					Player p = plugin.getServer().getPlayer(craft.captainName);
@@ -5205,14 +5191,15 @@ public class CraftMover {
 			float totalActualSetSpeed = 0;
 			for (int i : craft.engineIDLocs.keySet()) {
 				if (craft.engineIDSetOn.get(i) && !craft.engineIDIsOn.get(i) && (craft.engineIDLocs.get(i) != null)) {
-					if ((craft.maxY >= 70) || ((craft.sizeY < 10) && (craft.maxY >= 63))) {
+					if ( (craft.maxY >= 64)) {
 						int engineType = craft.engineIDTypes.get(i);
 						if ((engineType != 1) || (((engineType == 0) || (engineType == 2) || (engineType == 4)) && craft.submergedMode)) {
 							craft.engineIDIsOn.put(i, true);
 						}
 					}
 				} else if (craft.engineIDIsOn.get(i) && (craft.engineIDLocs.get(i) != null)) {
-					if ((craft.maxY < 70 && craft.sizeY > 10) ||  (craft.maxY < 63) || craft.submergedMode) {
+					//if ((craft.maxY < 70 && craft.sizeY > 10) ||  (craft.maxY < 63) || craft.submergedMode) {
+					if ((craft.maxY < 64) || craft.submergedMode) {
 						int engineType = craft.engineIDTypes.get(i);
 						if (((engineType != 0) || !craft.submergedMode) && (engineType != 1) && ((engineType != 2) || !craft.submergedMode) && ((engineType != 4) || !craft.submergedMode) && (engineType != 9)) {
 							craft.engineIDIsOn.put(i, false);

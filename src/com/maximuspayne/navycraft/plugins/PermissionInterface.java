@@ -41,7 +41,7 @@ public class PermissionInterface {
 	
 	
 	
-	public static boolean CheckPermission(Player player, String command) {		
+	public static boolean CheckPerm(Player player, String command) {		
 		command = command.replace(" ", ".");
 		NavyCraft.instance.DebugMessage("Checking if " + player.getName() + " can " + command, 3);
 		
@@ -59,7 +59,7 @@ public class PermissionInterface {
 		    }
 	}
 	
-	public static boolean CheckQuietPermission(Player player, String command) {		
+	public static boolean CheckQuietPerm(Player player, String command) {		
 		command = command.replace(" ", ".");
 		NavyCraft.instance.DebugMessage("Checking if " + player.getName() + " can " + command, 3);
 		
@@ -78,7 +78,7 @@ public class PermissionInterface {
 	}
 	
 	public static boolean CheckEnabledWorld(Location loc) {
-		if(plugin.ConfigSetting("EnabledWorlds") != "null") {
+		if(!plugin.ConfigSetting("EnabledWorlds").equalsIgnoreCase("null")) {
 			String[] worlds = NavyCraft.instance.ConfigSetting("EnabledWorlds").split(",");
 			for(int i = 0; i < worlds.length; i++) {
 				if( loc.getWorld().getName().equalsIgnoreCase(worlds[i]) )

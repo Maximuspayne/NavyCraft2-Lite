@@ -673,11 +673,10 @@ public class MoveCraft_BlockListener implements Listener {
 				return;
 			}
 		} else if (craftTypeName.equalsIgnoreCase("periscope")) {
-			if (!player.hasPermission("movecraft.periscope.use") && !player.isOp()) {
+			if (!PermissionInterface.CheckPerm(player, "navycraft.basic")) {
 				player.sendMessage(ChatColor.RED + "You do not have permission to use this sign");
 				return;
 			}
-
 			if (NavyCraft.aaGunnersList.contains(player)) {
 				NavyCraft.aaGunnersList.remove(player);
 				if (player.getInventory().contains(Material.BLAZE_ROD)) {
@@ -1075,7 +1074,7 @@ public class MoveCraft_BlockListener implements Listener {
 				player.sendMessage("Start the vehicle before using this sign.");
 			}
 		} else if (craftTypeName.equalsIgnoreCase("aa-gun")) {
-			if (!player.hasPermission("movecraft.aa-gun.use") && !player.isOp()) {
+			if (!PermissionInterface.CheckPerm(player, "navycraft.basic")) {
 				player.sendMessage(ChatColor.RED + "You do not have permission to use this sign");
 				return;
 			}
@@ -1271,7 +1270,7 @@ public class MoveCraft_BlockListener implements Listener {
 					// check restrictions
 
 
-					if (!player.hasPermission("navycraft." + testCraft.type.name + ".takeover") && !player.isOp()) {
+					if (!PermissionInterface.CheckPerm(player, "navycraft.takeover") ) {
 						player.sendMessage(ChatColor.RED + "You do not have permission to takeover this vehicle.");
 						return;
 					}
@@ -1401,7 +1400,7 @@ public class MoveCraft_BlockListener implements Listener {
 				}
 
 
-				if (!player.hasPermission("navycraft." + craftType.name + ".start") && !player.isOp()) {
+				if (!PermissionInterface.CheckPerm(player, "navycraft." + craftType.name)) {
 					player.sendMessage(ChatColor.RED + "You do not have permission to initialize this type of vehicle.");
 					return;
 				}
@@ -1522,9 +1521,10 @@ public class MoveCraft_BlockListener implements Listener {
 		// if the first line of the sign is a craft type, get the matching craft type.
 		CraftType craftType = CraftType.getCraftType(craftTypeName);
 
-		if (!player.isOp() && (((craftType != null) || craftTypeName.equalsIgnoreCase("helm") || craftTypeName.equalsIgnoreCase("periscope") || craftTypeName.equalsIgnoreCase("nav") || craftTypeName.equalsIgnoreCase("aa-gun") || craftTypeName.equalsIgnoreCase("select") || craftTypeName.equalsIgnoreCase("claim") || craftTypeName.equalsIgnoreCase("spawn") || craftTypeName.equalsIgnoreCase("recall") || craftTypeName.equalsIgnoreCase("target") || craftTypeName.equalsIgnoreCase("radar") || craftTypeName.equalsIgnoreCase("detector") || craftTypeName.equalsIgnoreCase("sonar") || craftTypeName.equalsIgnoreCase("hydrophone") || craftTypeName.equalsIgnoreCase("subdrive") || craftTypeName.equalsIgnoreCase("firecontrol") || craftTypeName.equalsIgnoreCase("passivesonar") || craftTypeName.equalsIgnoreCase("activesonar") || craftTypeName.equalsIgnoreCase("hfsonar") || craftTypeName.equalsIgnoreCase("launcher") || craftTypeName.equalsIgnoreCase("engine") || craftTypeName.equalsIgnoreCase("tdc") || craftTypeName.equalsIgnoreCase("radio")) && !PermissionInterface.CheckPermission(player, "navycraft." + craftTypeName + ".create"))) {
+		if (!player.isOp() && (((craftType != null) || craftTypeName.equalsIgnoreCase("helm") || craftTypeName.equalsIgnoreCase("periscope") || craftTypeName.equalsIgnoreCase("nav") || craftTypeName.equalsIgnoreCase("aa-gun") || craftTypeName.equalsIgnoreCase("select") || craftTypeName.equalsIgnoreCase("claim") || craftTypeName.equalsIgnoreCase("spawn") || craftTypeName.equalsIgnoreCase("recall") || craftTypeName.equalsIgnoreCase("target") || craftTypeName.equalsIgnoreCase("radar") || craftTypeName.equalsIgnoreCase("detector") || craftTypeName.equalsIgnoreCase("sonar") || craftTypeName.equalsIgnoreCase("hydrophone") || craftTypeName.equalsIgnoreCase("subdrive") || craftTypeName.equalsIgnoreCase("firecontrol") || craftTypeName.equalsIgnoreCase("passivesonar") || craftTypeName.equalsIgnoreCase("activesonar") || craftTypeName.equalsIgnoreCase("hfsonar") || craftTypeName.equalsIgnoreCase("launcher") || craftTypeName.equalsIgnoreCase("engine") || craftTypeName.equalsIgnoreCase("tdc") || craftTypeName.equalsIgnoreCase("radio")) && !PermissionInterface.CheckPerm(player, "navycraft.signcreate"))) {
 			player.sendMessage("You don't have permission to create this type of sign!");
 			event.setCancelled(true);
+			return;
 		}
 
 		Craft theCraft = Craft.getPlayerCraft(event.getPlayer());
@@ -1645,12 +1645,17 @@ public class MoveCraft_BlockListener implements Listener {
 					player.sendMessage("Essentials Economy error");
 					return;
 				}
-				if (!ess.getUser(player).canAfford(new BigDecimal(cost))) {
+				if (!PermissionInterface.CheckQuietPerm(player, "navycraft.free") && !ess.getUser(player).canAfford(new BigDecimal(cost))) {
 					player.sendMessage(ChatColor.YELLOW + "You cannot afford this sign:" + ChatColor.RED + "$" + cost);
 					event.setCancelled(true);
 					return;
+				}else if( !PermissionInterface.CheckQuietPerm(player, "navycraft.free") ) {
+					ess.getUser(player).takeMoney(new BigDecimal(cost));
+					player.sendMessage(ChatColor.YELLOW + "You purchase sign for " + ChatColor.GREEN + "$" + cost + ChatColor.YELLOW + ". Type " + ChatColor.WHITE + "\"/sign undo\"" + ChatColor.YELLOW + " to cancel.");
+				}else
+				{
+					player.sendMessage(ChatColor.YELLOW + "You purchase sign for " + ChatColor.GREEN + "$FREE" + ChatColor.YELLOW + ". Type " + ChatColor.WHITE + "\"/sign undo\"" + ChatColor.YELLOW + " to cancel.");
 				}
-				ess.getUser(player).takeMoney(new BigDecimal(cost));
 				NavyCraft.playerLastBoughtSign.put(player, event.getBlock());
 				NavyCraft.playerLastBoughtCost.put(player, cost);
 				NavyCraft.playerLastBoughtSignString0.put(player, craftTypeName);
@@ -1658,7 +1663,6 @@ public class MoveCraft_BlockListener implements Listener {
 				NavyCraft.playerLastBoughtSignString1.put(player, string1);
 				String string2 = event.getLine(2).trim().toLowerCase().replaceAll(ChatColor.BLUE.toString(), "");
 				NavyCraft.playerLastBoughtSignString2.put(player, string2);
-				player.sendMessage(ChatColor.YELLOW + "You purchase sign for " + ChatColor.GREEN + "$" + cost + ChatColor.YELLOW + ". Type " + ChatColor.WHITE + "\"/sign undo\"" + ChatColor.YELLOW + " to cancel.");
 			}
 		}
 
