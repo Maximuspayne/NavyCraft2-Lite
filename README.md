@@ -21,14 +21,24 @@ Type /navycraft or /nc to see basic plugin help commands. Type "/ship help" to g
 -Permissions-
 
 navycraft.<VEHICLE TYPE>  - grants permission to use specific vehicle type ex. "navycraft.ship" "navycraft.aircraft"
+
 navycraft.basic - grants usage of basic help commands, allows periscope and aa-gun use
+
 navycraft.admin - grants usage of admin commands and cleanup mode
+
 navycraft.signcreate - allows players to place vehicle and equipment signs
+
 navycraft.takeover - allows players to takeover an enemy ship after a timer
+
 navycraft.free - makes vehicle and equipment purchases free
 
+
 navycraft.kit - grants usage of the "/sailor" kit
+
 navycraft.reload - reload weapons, not functional at this time
+
 navycraft.drive - allows driving vehicle using command instead of sign (unsupported at this time)
+
 navycraft.remote - allows remote controlling of vehicles (unsupported at this time)
+
 navycraft.other - allows use of hyperdrive and other unsupported commands
