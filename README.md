@@ -20,7 +20,7 @@ Type /navycraft or /nc to see basic plugin help commands. Type "/ship help" to g
 
 -Permissions-
 
-navycraft.<VEHICLE TYPE>  - grants permission to use specific vehicle type ex. "navycraft.ship" "navycraft.aircraft"
+navycraft.[VEHICLE TYPE]  - grants permission to use specific vehicle type ex. "navycraft.ship" "navycraft.aircraft"
 
 navycraft.basic - grants usage of basic help commands, allows periscope and aa-gun use
 
