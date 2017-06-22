@@ -8,6 +8,7 @@ import java.util.logging.*;
 import java.io.File;
 
 import org.bukkit.block.Block;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Egg;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -88,6 +89,8 @@ public class NavyCraft extends JavaPlugin {
 	public static HashMap<String, Long> shipTPCooldowns = new HashMap<String, Long>();
 	
 	public static int schedulerCounter = 0;
+	
+	public static HashMap<Player, Float> playerEngineVolumes = new HashMap<Player, Float>();
 
 	public void loadProperties() {
 		configFile = new ConfigFile();
@@ -171,7 +174,8 @@ public class NavyCraft extends JavaPlugin {
 					+ "at coordinates " + Integer.toString(x) + ", "
 					+ Integer.toString(y) + ", " + Integer.toString(z));
 
-	
+		if( signBlock == null )
+			signBlock = player.getLocation().getBlock();
 		Craft craft = new Craft(craftType, player, name, dr, signBlock.getLocation(), this);
 
 		
@@ -694,12 +698,17 @@ public class NavyCraft extends JavaPlugin {
 	}
    
 	@SuppressWarnings("deprecation")
-	public static void explosion(int explosionRadius, Block warhead)
+	public static void explosion(int explosionRadius, Block warhead, boolean signs)
 	{
 		short powerMatrix[][][];
 		powerMatrix = new short[explosionRadius*2+1][explosionRadius*2+1][explosionRadius*2+1];
 		
 		powerMatrix[explosionRadius][explosionRadius][explosionRadius] = (short)(explosionRadius*50);
+		
+		warhead.setType(Material.WALL_SIGN);
+		Sign firstSign = (Sign) warhead.getState();
+		firstSign.setLine(0, "refPower="+powerMatrix[explosionRadius][explosionRadius][explosionRadius]);
+		firstSign.update();
 		
 		int refI=0;
 		int refJ=0;
@@ -722,85 +731,100 @@ public class NavyCraft extends JavaPlugin {
 				{
 					for( int k=-r; k<=r; k++ )
 					{
+						
+						
 						float refPowerMult = 1.0f;
-						if( Math.abs(i) == r )
+						curX = i + explosionRadius;
+						curY = j + explosionRadius;
+						curZ = k + explosionRadius;
+						
+						if( powerMatrix[curX][curY][curZ] > 0 )
+							continue;
+						
+						if( Math.abs(i) == r )//if on x edges
 						{
 							refI = (int)((Math.abs(i) - 1)*Math.signum(i));
-							if( Math.abs(j) == r )
+							if( Math.abs(j) == r )//if on xy edges 
 							{
 								refJ = (int)((Math.abs(j) - 1)*Math.signum(j));
-								if( Math.abs(k) == r )
+								if( Math.abs(k) == r && Math.abs(k) > 2) //corner piece, not innermost corners
 								{
 									refK = (int)((Math.abs(k) - 1)*Math.signum(k));
-									refPowerMult = 0.14f;
-								}else if( Math.abs(k) == r - 1 )
+									refPowerMult = 0.10f;
+								}else if( Math.abs(k) >= r - 2 && Math.abs(k) > 2 ) //near corner piece
 								{
-									refPowerMult = 0.14f;
-								}else	
+									refPowerMult = 0.25f;
+								}else	//middle xy edge
 								{
-									refPowerMult = 0.33f;
+									refPowerMult = 0.40f;
 								}
-							}else if( Math.abs(k) == r )
+							}else if( Math.abs(k) == r ) //if on xz edges
 							{
 								refK = (int)((Math.abs(k) - 1)*Math.signum(k));
-								refPowerMult = 0.33f;
-								if( Math.abs(j) == r - 1 )
-									refPowerMult = 0.14f;
-							}else if( Math.abs(j) == r - 1 )
+								refPowerMult = 0.40f;
+								if( Math.abs(j) >= r - 2 && Math.abs(j) > 2 ) //near corner
+									refPowerMult = 0.25f;
+							}else if( Math.abs(j) == r - 1 )//if near xy edge
 							{
-								refPowerMult = 0.33f;
-								if( Math.abs(k) == r - 1 )
-									refPowerMult = 0.14f;
-							}else if( Math.abs(k) == r - 1 )
+								refPowerMult = 0.40f;
+								if( Math.abs(k) >= r - 2 && Math.abs(k) > 2 ) //near xyz corner
+									refPowerMult = 0.25f;
+							}else if( Math.abs(k) == r - 1 )//if near xz edge
 							{
-								refPowerMult = 0.33f;
-								if( Math.abs(j) == r - 1 )
-									refPowerMult = 0.14f;
+								refPowerMult = 0.40f;
+								if( Math.abs(j) >= r - 2 && Math.abs(j) > 2 )//near xyz corner
+									refPowerMult = 0.25f;
+							}else //somewhere else on x sides
+							{
+								refPowerMult = 0.60f;
 							}
 							doPower=true;
-						}else if( Math.abs(j) == r )
+						}else if( Math.abs(j) == r )//if on y sides
 						{
 							refJ = (int)((Math.abs(j) - 1)*Math.signum(j));
-							if( Math.abs(k) == r )
+							if( Math.abs(k) == r ) //if on yz edge
 							{
 								refK = (int)((Math.abs(k) - 1)*Math.signum(k));
-								refPowerMult = 0.33f;
-								if( Math.abs(i) == r - 1 )
-									refPowerMult = 0.14f;
-							}else if( Math.abs(i) == r - 1 )
+								refPowerMult = 0.40f;
+								if( Math.abs(i) >= r - 2 && Math.abs(i) > 2 )//near xyz corner
+									refPowerMult = 0.25f;
+							}else if( Math.abs(i) == r - 1 )//near xy edge
 							{
-								refPowerMult = 0.33f;
-								if( Math.abs(k) == r - 1 )
-									refPowerMult = 0.14f;
-							}else if( Math.abs(k) == r - 1 )
+								refPowerMult = 0.40f;
+								if( Math.abs(k) >= r - 2 && Math.abs(k) > 2 )//near xyz corner
+									refPowerMult = 0.25f;
+							}else if( Math.abs(k) == r - 1 )//near yz edge
 							{
-								refPowerMult = 0.33f;
-								if( Math.abs(i) == r - 1 )
-									refPowerMult = 0.14f;
+								refPowerMult = 0.40f;
+								if( Math.abs(i) >= r - 2 && Math.abs(i) > 2 )//near xyz corner
+									refPowerMult = 0.25f;
+							}else //somewhere else on y sides
+							{
+								refPowerMult = 0.60f;
 							}
 							doPower=true;
-						}else if( Math.abs(k) == r )
+						}else if( Math.abs(k) == r )//if on z sides
 						{
 							refK = (int)((Math.abs(k) - 1)*Math.signum(k));
-							if( Math.abs(i) == r - 1 )
+							if( Math.abs(i) >= r - 2 && Math.abs(i) > 2 )//near xz side
 							{
-								refPowerMult = 0.33f;
-								if( Math.abs(j) == r - 1 )
-									refPowerMult = 0.14f;
-							}else if( Math.abs(j) == r - 1 )
+								refPowerMult = 0.40f;
+								if( Math.abs(j) >= r - 2 && Math.abs(j) > 2 )//near corner
+									refPowerMult = 0.25f;
+							}else if( Math.abs(j) == r - 1 )//near yz side
 							{
-								refPowerMult = 0.33f;
-								if( Math.abs(i) == r - 1 )
-									refPowerMult = 0.14f;
+								refPowerMult = 0.40f;
+								if( Math.abs(i) >= r - 2 && Math.abs(i) > 2 )//near corner
+									refPowerMult = 0.25f;
+							}else //somewhere else on z sides
+							{
+								refPowerMult = 0.60f;
 							}
 							doPower=true;
 						}
 						
 						if( doPower )
 						{
-							curX = i + explosionRadius;
-							curY = j + explosionRadius;
-							curZ = k + explosionRadius;
 							refX = refI + explosionRadius;
 							refY = refJ + explosionRadius;
 							refZ = refK + explosionRadius;
@@ -816,21 +840,21 @@ public class NavyCraft extends JavaPlugin {
 								if( Craft.blockHardness(blockType) == 4 )
 								{
 									blockResist = -1;
-								}else if( Craft.blockHardness(blockType) == 3 )
+								}else if( Craft.blockHardness(blockType) == 3 )//obsidian
 						    	{
 									blockResist = (short)(40 + 40*Math.random());
-						    	}else if( Craft.blockHardness(blockType) == 2 )
+						    	}else if( Craft.blockHardness(blockType) == 2 )//iron
 						    	{
 						    		blockResist = (short)(20 + 20*Math.random());
-						    	}else if( Craft.blockHardness(blockType) == 1 )
+						    	}else if( Craft.blockHardness(blockType) == 1 )//wood
 						    	{
 						    		blockResist = (short)(10 + 15*Math.random());
-						    	}else if( Craft.blockHardness(blockType) == -3 )
+						    	}else if( Craft.blockHardness(blockType) == -3 )//water
 						    	{
-						    		blockResist=(short)(10+10*Math.random());
+						    		blockResist=(short)(5+5*Math.random());
 						    	}else
 						    	{
-						    		blockResist = (short)(5+5*Math.random());
+						    		blockResist = (short)(2*Math.random());
 						    	}
 								
 								if( Craft.blockHardness(blockType) == -1 )
@@ -848,12 +872,24 @@ public class NavyCraft extends JavaPlugin {
 									fuseDelay = fuseDelay + 2;
 								}else
 								{
+
 									if( refPower > blockResist && blockResist >= 0 )
 									{
-										if( theBlock.getY() > 62 )
-								    		theBlock.setType(Material.AIR);
-								    	else
-								    		theBlock.setType(Material.WATER);
+
+										if( signs ) {
+											theBlock.setType(Material.WALL_SIGN);
+											Sign newSign = (Sign) theBlock.getState();
+											newSign.setLine(0, "refPower="+refPower);
+											newSign.setLine(1, "blockResist="+blockResist);
+											newSign.setLine(2, "refPowerMult="+refPowerMult);
+											newSign.update();
+										}else{
+											if( theBlock.getY() > 62 )
+												theBlock.setType(Material.AIR);
+											else
+												theBlock.setType(Material.WATER);
+										}
+										
 									}else
 									{
 										refPower = 0;
@@ -875,6 +911,6 @@ public class NavyCraft extends JavaPlugin {
 				}
 			}
 		}
-		warhead.getWorld().createExplosion(warhead.getLocation(), explosionRadius);
+		warhead.getWorld().createExplosion(warhead.getLocation(), explosionRadius/2.0f);
 	}
 }

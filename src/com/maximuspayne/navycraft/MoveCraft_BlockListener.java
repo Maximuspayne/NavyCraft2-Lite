@@ -1270,8 +1270,8 @@ public class MoveCraft_BlockListener implements Listener {
 					// check restrictions
 
 
-					if (!PermissionInterface.CheckPerm(player, "navycraft.takeover") ) {
-						player.sendMessage(ChatColor.RED + "You do not have permission to takeover this vehicle.");
+					if (!PermissionInterface.CheckPerm(player, "navycraft." + craftType.name)) {
+						player.sendMessage(ChatColor.RED + "You do not have permission to use this type of vehicle.");
 						return;
 					}
 
@@ -1401,7 +1401,7 @@ public class MoveCraft_BlockListener implements Listener {
 
 
 				if (!PermissionInterface.CheckPerm(player, "navycraft." + craftType.name)) {
-					player.sendMessage(ChatColor.RED + "You do not have permission to initialize this type of vehicle.");
+					player.sendMessage(ChatColor.RED + "You do not have permission to use this type of vehicle.");
 					return;
 				}
 
@@ -1688,6 +1688,7 @@ public class MoveCraft_BlockListener implements Listener {
 					}
 				}
 			}
+			
 		}
 	}
 

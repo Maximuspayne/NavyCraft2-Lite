@@ -38,12 +38,20 @@ public class MoveCraft_EntityListener implements Listener {
     		{
     			if( NavyCraft.shotTNTList.containsKey(ent.getUniqueId()) )
     			{
-    				
-    				if( !structureUpdate(event.getLocation(), NavyCraft.shotTNTList.get(ent.getUniqueId())) )
-    					if( !structureUpdate(event.getLocation().getBlock().getRelative(4,4,4).getLocation(), NavyCraft.shotTNTList.get(ent.getUniqueId())) )
-    						if( !structureUpdate(event.getLocation().getBlock().getRelative(-4,-4,-4).getLocation(), NavyCraft.shotTNTList.get(ent.getUniqueId())) )
-    							if( !structureUpdate(event.getLocation().getBlock().getRelative(2,-1,-2).getLocation(), NavyCraft.shotTNTList.get(ent.getUniqueId())) )
-    								structureUpdate(event.getLocation().getBlock().getRelative(-2,1,2).getLocation(), NavyCraft.shotTNTList.get(ent.getUniqueId()));
+    				Craft checkCraft;
+    				checkCraft = structureUpdate(event.getLocation(), NavyCraft.shotTNTList.get(ent.getUniqueId()));
+    				if( checkCraft == null ) {
+    					checkCraft = structureUpdate(event.getLocation().getBlock().getRelative(4,4,4).getLocation(), NavyCraft.shotTNTList.get(ent.getUniqueId()));
+    					if( checkCraft == null ) {
+    						checkCraft = structureUpdate(event.getLocation().getBlock().getRelative(-4,-4,-4).getLocation(), NavyCraft.shotTNTList.get(ent.getUniqueId()));
+    						if( checkCraft == null ) {
+    							checkCraft = structureUpdate(event.getLocation().getBlock().getRelative(2,-2,-2).getLocation(), NavyCraft.shotTNTList.get(ent.getUniqueId()));
+    							if( checkCraft == null ) {
+    								checkCraft = structureUpdate(event.getLocation().getBlock().getRelative(-2,2,2).getLocation(), NavyCraft.shotTNTList.get(ent.getUniqueId()));
+    							}
+    						}
+    					}
+    				}
     				NavyCraft.shotTNTList.remove(ent.getUniqueId());
     			}
     			else
@@ -54,16 +62,16 @@ public class MoveCraft_EntityListener implements Listener {
     }
     
     
-    public boolean structureUpdate(Location loc, Player causer)
+    public Craft structureUpdate(Location loc, Player causer)
     {
     	Craft testcraft = Craft.getCraft(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
 		if( testcraft != null )
 		{
 			CraftMover cm = new CraftMover(testcraft, plugin);
 			cm.structureUpdate(causer,false);
-			return true;
+			return testcraft;
 		}
-		return false;
+		return null;
     }
     
     @EventHandler(priority = EventPriority.HIGH)

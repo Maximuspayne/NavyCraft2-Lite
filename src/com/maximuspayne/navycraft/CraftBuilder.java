@@ -539,7 +539,7 @@ public class CraftBuilder {
 		set(blockType, x, y, z);
 		craft.blockCount++;
 		
-		craft.weight += Craft.blockWeight(blockType);
+		craft.weightCurrent += Craft.blockWeight(blockType);
 		
 		if(craft.blockCount > craft.type.maxBlocks){
 			return;

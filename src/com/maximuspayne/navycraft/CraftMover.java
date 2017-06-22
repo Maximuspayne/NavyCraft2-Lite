@@ -35,6 +35,7 @@ import org.bukkit.util.Vector;
 import com.earth2me.essentials.Essentials;
 import com.maximuspayne.aimcannon.AimCannon;
 import com.maximuspayne.aimcannon.OneCannon;
+import com.maximuspayne.aimcannon.Weapon;
 import com.maximuspayne.navycraft.plugins.PermissionInterface;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
@@ -316,6 +317,9 @@ public class CraftMover {
 
 	@SuppressWarnings("deprecation")
 	public void calculateMove(int dx, int dy, int dz) {
+		//Try to detect damage and changes before moving
+		structureUpdate(null, false);
+		
 		NavyCraft.instance.DebugMessage("DXYZ is (" + dx + ", " + dy + ", " + dz + ")", 4);
 		// instead of forcing the craft to move, check some things beforehand
 		if (craft.waitTorpLoading > 0) {
@@ -328,7 +332,10 @@ public class CraftMover {
 
 			return;
 		}
-
+		
+		//Return if active weapon within vehicle grid
+		if( checkForWeapons() )
+			return;
 
 		if (craft.sinking) {
 			if (craft.driverName != null) {
@@ -340,6 +347,7 @@ public class CraftMover {
 
 			return;
 		}
+	
 
 		if (craft.inHyperSpace) {
 			if (dx > 0) {
@@ -602,6 +610,13 @@ public class CraftMover {
 
 				if (solidCount > (int) (craft.sizeX * craft.sizeZ * 0.2f)) {
 					craft.doSink = true;
+					for (String s : craft.crewNames) {
+						Player p = plugin.getServer().getPlayer(s);
+						if (p != null) {
+							p.sendMessage(ChatColor.RED + "***We ran aground!***");
+						}
+
+					}
 				} else {
 					return craft.buoyancy;
 				}
@@ -1041,7 +1056,7 @@ public class CraftMover {
 			}
 
 		}
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+		//plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
 			if (NavyCraft.shutDown) { return; }
 
 			if (!craft.doCollide){
@@ -1060,7 +1075,7 @@ public class CraftMover {
 				} else {
 					colBlock = new Location(craft.world, craft.minX + (craft.sizeX / 2), craft.minY, craft.minZ + (craft.sizeZ / 2)).getBlock();
 				}
-				NavyCraft.explosion(8, colBlock);
+				NavyCraft.explosion(6, colBlock,false);
 
 				craft.setSpeed = 0;
 				craft.turnProgress = 0;
@@ -1097,7 +1112,7 @@ public class CraftMover {
 					}
 				}
 			}
-		});
+		//});
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1388,6 +1403,9 @@ public class CraftMover {
 		if (causer != null) {
 			craft.lastCauser = causer;
 		}
+		
+		if( craft.weightCurrent > craft.weightStart )
+			craft.weightStart = craft.weightCurrent;
 
 		craft.lastUpdate = System.currentTimeMillis();
 
@@ -1408,7 +1426,7 @@ public class CraftMover {
 							ess.getUser(p).takeMoney(new BigDecimal(craft.vehicleCost));
 
 						} else if (PermissionInterface.CheckQuietPerm(p, "navycraft.free")) {
-							p.sendMessage("Vehicle given freely to OP!");
+							p.sendMessage("Vehicle given for free!");
 						} else {
 							p.sendMessage(ChatColor.RED + "You cannot afford this vehicle, destroying vehicle.");
 							craft.doDestroy = true;
@@ -1662,7 +1680,7 @@ public class CraftMover {
 							} else // remove block
 							{
 
-								craft.weight -= Craft.blockWeight(craftBlockId);
+								craft.weightCurrent -= Craft.blockWeight(craftBlockId);
 
 								// air, water, or lava
 								if ((craft.waterType != 0) && ((craft.minY + y) <= 62)) {
@@ -1698,7 +1716,7 @@ public class CraftMover {
 
 		if (craft.type.canNavigate || craft.type.canDive) {
 			updateBuoyancy(displacement);
-			if (!craft.isMoving && scheduled && (craft.buoyancy != 0) && (((craft.buoyFloodTicker == 3) && (Math.abs((displacement - (craft.weight * craft.weightMult)) / (craft.weight * craft.weightMult)) > 0.3f)) || (craft.buoyFloodTicker == 7))) {
+			if (!craft.isMoving && scheduled && (craft.buoyancy != 0) && (((craft.buoyFloodTicker == 3) && (Math.abs((displacement - (craft.weightStart * craft.weightMult)) / (craft.weightStart * craft.weightMult)) > 0.3f)) || (craft.buoyFloodTicker == 7))) {
 				if ((craft.waitTorpLoading == 0) && !craft.launcherOn) {
 					delayed_move(0, calculateBuoyancyMove(), 0);
 				}
@@ -1871,8 +1889,8 @@ public class CraftMover {
 	}
 
 	public void updateBuoyancy(float displacement) {
-		if (displacement < (craft.weight * craft.weightMult)) {
-			if (craft.type.canDive && (displacement < (craft.weight * craft.weightMult * 0.9f))) {
+		if (displacement < (craft.weightStart * craft.weightMult)) {
+			if (craft.type.canDive && (displacement < (craft.weightStart * craft.weightMult * 0.9f))) {
 
 				craft.buoyancy = -1;
 			} else if (!craft.type.canDive) {
@@ -1883,7 +1901,7 @@ public class CraftMover {
 			}
 		} else {
 
-			if (craft.type.canDive && (displacement > (craft.weight * craft.weightMult * 1.1f))) {
+			if (craft.type.canDive && (displacement > (craft.weightStart * craft.weightMult * 1.1f))) {
 
 				craft.buoyancy = 1;
 			} else if (!craft.type.canDive) {
@@ -1907,12 +1925,12 @@ public class CraftMover {
 				craft.ballastAirPercent = 100;
 			}
 		} else if (craft.ballastMode == 3) {
-			if (craft.displacement > (craft.weight * 1.05f)) {
+			if (craft.displacement > (craft.weightStart * 1.05f)) {
 				craft.ballastAirPercent -= 2;
 				if (craft.ballastAirPercent < 0) {
 					craft.ballastAirPercent = 0;
 				}
-			} else if (craft.displacement < (craft.weight * 0.95f)) {
+			} else if (craft.displacement < (craft.weightStart * 0.95f)) {
 				craft.ballastAirPercent += 2;
 				if (craft.ballastAirPercent > 100) {
 					craft.ballastAirPercent = 100;
@@ -2305,7 +2323,7 @@ public class CraftMover {
 		} else if (craftTypeName.equalsIgnoreCase("buoyancy")) {
 			boolean doUpdate = false;
 
-			String weightString = "Wt:" + craft.weight;
+			String weightString = "Wt:" + craft.weightStart;
 			if (weightString.length() > 15) {
 				weightString.substring(0, 14);
 			}
@@ -5209,10 +5227,10 @@ public class CraftMover {
 					if (((craft.type.canNavigate && !craft.type.isTerrestrial) && ((engVehicleType == 0) || (engVehicleType == 1))) || (craft.type.canDive && ((engVehicleType == 0) || (engVehicleType == 1) || (engType == 9))) || (craft.type.canFly && (engVehicleType == 2) && (craft.driverName != null)) || (craft.type.isTerrestrial && (engVehicleType == 3))) {
 						if (craft.engineIDTypes.get(i) == engType) {
 							float craftWeight;
-							if (craft.weight < powerRating) {
+							if (craft.weightStart < powerRating) {
 								craftWeight = powerRating;
 							} else {
-								craftWeight = craft.weight;
+								craftWeight = craft.weightStart;
 							}
 							//System.out.println("Engine " + i + " status=" + craft.engineIDOn.get(i) + " powerRating=" +
 							//powerRating );
@@ -6310,7 +6328,7 @@ public class CraftMover {
 			broadcastMsg += craft.name.toUpperCase() + " class";
 		}
 
-		broadcastMsg += ChatColor.WHITE + " - " + craft.weight + " tons -";
+		broadcastMsg += ChatColor.WHITE + " - " + craft.weightStart + " tons -";
 
 		if (craft.type.canFly) {
 			broadcastMsg += ChatColor.YELLOW + " was shot down.";
@@ -6658,13 +6676,13 @@ public class CraftMover {
 						pitch1 = 0.8f;
 						pitch2 = 0.5f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 1) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						} else if (((i) % 4) == 2) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
 						} else if (((i) % 4) == 3) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
 						}
 					}
 					if (engType == 1) // Motor 1
@@ -6679,13 +6697,13 @@ public class CraftMover {
 						pitch1 = 0.8f;
 						pitch2 = 0.5f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 1) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						} else if (((i) % 4) == 2) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
 						} else if (((i) % 4) == 3) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
 						}
 					}
 					if (engType == 3) // Boiler 1
@@ -6693,9 +6711,9 @@ public class CraftMover {
 						pitch1 = 0.6f;
 						pitch2 = 0.5f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 2) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						}
 					}
 					if (engType == 4) // Diesel 3
@@ -6703,13 +6721,13 @@ public class CraftMover {
 						pitch1 = 0.8f;
 						pitch2 = 0.5f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 1) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						} else if (((i) % 4) == 2) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
 						} else if (((i) % 4) == 3) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
 						}
 					}
 					if (engType == 5) // Gasoline 1
@@ -6717,13 +6735,13 @@ public class CraftMover {
 						pitch1 = 1.2f;
 						pitch2 = 0.8f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 1) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						} else if (((i) % 4) == 2) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 3) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						}
 					}
 					if (engType == 6) // Boiler 2
@@ -6731,9 +6749,9 @@ public class CraftMover {
 						pitch1 = 0.6f;
 						pitch2 = 0.5f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 2) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						}
 					}
 					if (engType == 7) // Boiler 3
@@ -6741,9 +6759,9 @@ public class CraftMover {
 						pitch1 = 0.6f;
 						pitch2 = 0.5f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 2) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						}
 					}
 					if (engType == 8) // Gasoline 2
@@ -6751,13 +6769,13 @@ public class CraftMover {
 						pitch1 = 1.4f;
 						pitch2 = 1.0f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 1) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						} else if (((i) % 4) == 2) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 3) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						}
 					}
 					if (engType == 9) // Nuclear
@@ -6765,9 +6783,9 @@ public class CraftMover {
 						pitch1 = 0.6f;
 						pitch2 = 0.5f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
 						} else if (((i) % 4) == 2) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
 						}
 					}
 					if ((engType >= 10) && (engType <= 17)) // Airplanes
@@ -6775,11 +6793,11 @@ public class CraftMover {
 						pitch1 = 1.4f;
 						pitch2 = 1.1f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 2) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
 						} else if (((i) % 4) == 3) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
 						}
 					}
 					if ((engType == 18) || (engType == 19)) // Tanks
@@ -6787,11 +6805,11 @@ public class CraftMover {
 						pitch1 = 0.8f;
 						pitch2 = 0.5f;
 						if (((i) % 4) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
 						} else if (((i) % 4) == 1) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
 						} else if (((i) % 4) == 3) {
-							cw.playSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
+							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
 						}
 					}
 
@@ -6799,6 +6817,17 @@ public class CraftMover {
 			}
 
 		});
+	}
+	
+	public void playEngineSound( Location loc, Sound sound, float volume, float pitch )
+	{
+		for( Player p : loc.getWorld().getPlayers() )
+		{
+			if( NavyCraft.playerEngineVolumes.containsKey(p) )
+				p.playSound(loc,  sound,  volume*NavyCraft.playerEngineVolumes.get(p)*.01f,  pitch);
+			else
+				p.playSound(loc,  sound,  volume,  pitch);
+		}
 	}
 
 	public void teleportUpdate() {
@@ -6815,5 +6844,17 @@ public class CraftMover {
 			craft.isMovingPlayers = false;
 
 		}, 1);
+	}
+	
+	public boolean checkForWeapons()
+	{
+		for( Weapon w : AimCannon.weapons )
+		{
+			if( w.warhead.getLocation().getBlockX() >= (craft.minX-1) && w.warhead.getLocation().getBlockX() < (craft.maxX+1) )
+				if( w.warhead.getLocation().getBlockZ() >= (craft.minZ-1) && w.warhead.getLocation().getBlockZ() < (craft.maxZ+1) )
+					if( w.warhead.getLocation().getBlockY() >= (craft.minY-1) && w.warhead.getLocation().getBlockY() < (craft.maxY+1) )
+						return true;
+		}
+		return false;
 	}
 }
