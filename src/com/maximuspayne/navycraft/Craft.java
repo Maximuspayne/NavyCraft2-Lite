@@ -256,7 +256,8 @@ public class Craft {
 	
 	public static HashMap<String, Craft> reboardNames = new HashMap<String, Craft>();
 	
-	public float weight = 0.0f;
+	public float weightStart = 0;
+	public float weightCurrent = 0;
 	public float displacement = 0.0f;
 	public float blockDisplacement = 0.0f;
 	public float airDisplacement = 0.0f;
@@ -423,7 +424,7 @@ public class Craft {
 	
 				if( !overrideAdd )
 				{
-					weight += Craft.blockWeight(blockId);
+					weightCurrent += Craft.blockWeight(blockId);
 					blockCount++;
 				}
 			}
@@ -466,7 +467,7 @@ public class Craft {
 		
 		// all craft types can move through air and flowing water/lava
 		if ( blockId == 0 ||
-				(blockId >= 8 && blockId <= 11 && data != 0) ||
+				(blockId >= 8 && blockId <= 11) ||
 				//blockId == 78 || 
 				BlocksInfo.coversGrass(blockId)) //snow cover
 			return true;

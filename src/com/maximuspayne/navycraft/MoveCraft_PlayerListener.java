@@ -41,7 +41,10 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
 import com.earth2me.essentials.Essentials;
+import com.maximuspayne.aimcannon.AimCannon;
 import com.maximuspayne.aimcannon.AimCannonPlayerListener;
+import com.maximuspayne.aimcannon.OneCannon;
+import com.maximuspayne.aimcannon.Weapon;
 import com.maximuspayne.navycraft.plugins.PermissionInterface;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
@@ -1152,6 +1155,22 @@ public class MoveCraft_PlayerListener implements Listener {
 					}
 					event.setCancelled(true);
 					return;
+				} else if (split[1].equalsIgnoreCase("weapons")) {
+					if( !PermissionInterface.CheckPerm(player, "navycraft.admin") )
+						return;
+					for (Weapon w : AimCannon.weapons) {
+							player.sendMessage("weapon -" + w.weaponType);
+					}
+					event.setCancelled(true);
+					return;
+				} else if (split[1].equalsIgnoreCase("cannons")) {
+					if( !PermissionInterface.CheckPerm(player, "navycraft.admin") )
+						return;
+					for (OneCannon c : AimCannon.cannons) {
+							player.sendMessage("cannon -" + c.cannonType);
+					}
+					event.setCancelled(true);
+					return;
 				} else if (split[1].equalsIgnoreCase("destroyShips")) {
 					if( !PermissionInterface.CheckPerm(player, "navycraft.admin") )
 						return;
@@ -1312,6 +1331,8 @@ public class MoveCraft_PlayerListener implements Listener {
 							+ "list the types of craft available");
 					player.sendMessage(ChatColor.YELLOW + "/[craft type] " + " : " + ChatColor.WHITE
 							+ "commands specific to the craft type try /ship help");
+					player.sendMessage(ChatColor.YELLOW + "/volume ## " + " : " + ChatColor.WHITE
+							+ "set engine piston volume from 0-100");
 				}
 				
 				if( PermissionInterface.CheckQuietPerm(player, "navycraft.admin") )
@@ -1623,6 +1644,76 @@ public class MoveCraft_PlayerListener implements Listener {
 				} else {
 					player.sendMessage("You can only get this kit in enabled worlds.");
 				}
+				event.setCancelled(true);
+				return;
+			} else if (craftName.equalsIgnoreCase("volume")) {
+				if (split.length == 2) {
+					float inValue = 1.0f;
+					try {
+						inValue = Float.parseFloat(split[1]);
+						if ((inValue >= 0) && (inValue <= 100.0f)) {
+							NavyCraft.playerEngineVolumes.put(player, inValue);
+							player.sendMessage("Volume set - " + inValue + "%");
+						} else {
+							player.sendMessage("Invalid volume percent, use a number from 0 to 100");
+						}
+					} catch (NumberFormatException e) {
+						player.sendMessage("Invalid volume percent, use a number from 0 to 100");
+					}
+				} else {
+					player.sendMessage("Change engine volume with /volume <%> with % from 0 to 100");
+				}
+				
+				event.setCancelled(true);
+				return;
+			} else if (craftName.equalsIgnoreCase("explode")) {
+				if (PermissionInterface.CheckPerm(player, "navycraft.admin")) {
+					if (split.length == 2) {
+						float inValue = 1.0f;
+						try {
+							inValue = Float.parseFloat(split[1]);
+							if ((inValue >= 1) && (inValue <= 100.0f)) {
+								NavyCraft.explosion((int)inValue, player.getLocation().getBlock(),false);
+								player.sendMessage("Boom Level - " + inValue);
+							} else {
+								player.sendMessage("Invalid explosion level, use a number from 1 to 100");
+							}
+						} catch (NumberFormatException e) {
+							player.sendMessage("Invalid explosion level, use a number from 1 to 100");
+						}
+					} else {
+						player.sendMessage("command /explode ###  number from 1-100");
+					}
+				}else {
+					player.sendMessage("You do not have permission to use that.");
+				}
+				
+				event.setCancelled(true);
+				return;
+			}else if (craftName.equalsIgnoreCase("explodesigns")) {
+				if (PermissionInterface.CheckPerm(player, "navycraft.admin")) {
+					if (split.length == 2) {
+						float inValue = 1.0f;
+						try {
+							inValue = Float.parseFloat(split[1]);
+							if ((inValue >= 1) && (inValue <= 100.0f)) {
+								NavyCraft.explosion((int)inValue, player.getLocation().getBlock(),true);
+								player.sendMessage("Boom Level - " + inValue);
+							} else {
+								player.sendMessage("Invalid explosion level, use a number from 1 to 100");
+							}
+						} catch (NumberFormatException e) {
+							player.sendMessage("Invalid explosion level, use a number from 1 to 100");
+						}
+					} else {
+						player.sendMessage("command /explode ###  number from 1-100");
+					}
+				}else{
+					player.sendMessage("You do not have permission to use that.");
+				}
+				
+				event.setCancelled(true);
+				return;
 			} else if (craftType != null) {
 
 				if (processCommand(craftType, player, split) == true) {
@@ -2268,7 +2359,8 @@ public class MoveCraft_PlayerListener implements Listener {
 			player.sendMessage(ChatColor.YELLOW + "Captain : " + ChatColor.WHITE + craft.captainName);
 			player.sendMessage(ChatColor.YELLOW + "Crew : " + ChatColor.WHITE + craft.crewNames.size());
 			player.sendMessage(ChatColor.YELLOW + "Size : " + ChatColor.WHITE + craft.blockCount + " blocks");
-			player.sendMessage(ChatColor.YELLOW + "Weight : " + ChatColor.WHITE + craft.weight + " tons");
+			player.sendMessage(ChatColor.YELLOW + "Weight (current) : " + ChatColor.WHITE + craft.weightCurrent + " tons");
+			player.sendMessage(ChatColor.YELLOW + "Weight (start) : " + ChatColor.WHITE + craft.weightStart + " tons");
 			player.sendMessage(ChatColor.YELLOW + "Displacement : " + ChatColor.WHITE + craft.displacement + " tons ("
 					+ craft.blockDisplacement + " block," + craft.airDisplacement + " air)");
 			player.sendMessage(ChatColor.YELLOW + "Health : " + ChatColor.WHITE
