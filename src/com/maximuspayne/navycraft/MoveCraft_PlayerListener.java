@@ -166,7 +166,17 @@ public class MoveCraft_PlayerListener implements Listener {
 			}
 			player.sendMessage(ChatColor.YELLOW + "You get off the AA-Gun.");
 
-		} else if (craft != null) {
+		} else if (NavyCraft.searchLightMap.containsKey(player) && ((event.getFrom().getBlockX() != event.getTo().getBlockX())
+				|| (event.getFrom().getBlockZ() != event.getTo().getBlockZ()))) {
+			
+			TeleportFix.updateNMSLight(null,NavyCraft.searchLightMap.get(player));
+			NavyCraft.searchLightMap.remove(player);
+			if (player.getInventory().contains(Material.BLAZE_ROD)) {
+				player.getInventory().remove(Material.BLAZE_ROD);
+			}
+			player.sendMessage(ChatColor.YELLOW + "You get off the searchlight.");
+
+		}else if (craft != null) {
 			// craft.setSpeed(1);
 
 			if (craft.isMovingPlayers) {
@@ -287,6 +297,27 @@ public class MoveCraft_PlayerListener implements Listener {
 					return;
 				}
 
+				
+				if( block.getType() == Material.JACK_O_LANTERN ) {
+					if (!PermissionInterface.CheckPerm(player, "navycraft.basic")) {
+						player.sendMessage(ChatColor.RED + "You do not have permission to use this.");
+						return;
+					}
+					
+					if (player.getItemInHand().getTypeId() > 0) {
+						player.sendMessage(ChatColor.RED + "Have nothing in your hand before using this.");
+						return;
+					}
+					
+					Location newLoc = new Location(player.getWorld(), block.getLocation().getBlockX(), block.getLocation().getBlockY()+1, block.getLocation().getBlockZ());
+					player.teleport(newLoc);
+					player.setItemInHand(new ItemStack(369, 1));
+					NavyCraft.searchLightMap.put(player, newLoc);
+					player.sendMessage(ChatColor.YELLOW + "Manning Searchlight! Left Click with Blaze Rod to point!");
+					player.getWorld().playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.0f);
+				}
+				
+				
 				if ((block.getTypeId() == 69) && (block.getRelative(BlockFace.DOWN, 1).getTypeId() == 68)) {
 					Craft testCraft = Craft.getCraft(block.getX(), block.getY(), block.getZ());
 					if (testCraft != null) {
@@ -436,6 +467,25 @@ public class MoveCraft_PlayerListener implements Listener {
 				return;
 			}
 			playerUsedAnItem(player, playerCraft);
+		}
+		
+		// Search light
+		if ((action == Action.LEFT_CLICK_AIR) && NavyCraft.searchLightMap.containsKey(player)
+				&& (player.getItemInHand().getType() == Material.BLAZE_ROD)) {
+			Set<Material> transp = new HashSet<>();
+			transp.add(Material.AIR);
+			Block block=null;
+			try {
+				block = player.getTargetBlock(transp, 100);
+			}catch( IllegalStateException e ) {
+			}
+			
+			if (block != null) {
+				TeleportFix.updateNMSLight(block.getLocation(), NavyCraft.searchLightMap.get(player));
+				NavyCraft.searchLightMap.put(player, block.getLocation());
+				player.getWorld().playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1.0f);
+			}
+			
 		}
 
 		
@@ -882,9 +932,15 @@ public class MoveCraft_PlayerListener implements Listener {
 					&& NavyCraft.cleanupPlayers.contains(player.getName())
 					&& PermissionInterface.CheckEnabledWorld(player.getLocation())
 					&& !NavyCraft.checkSafeDockRegion(player.getLocation())) {
-				HashSet<Byte> hs = new HashSet<>();
-				hs.add((byte) 0x0);
-				Block block = player.getTargetBlock(hs, 200);
+				//HashSet<Byte> hs = new HashSet<>();
+				//hs.add((byte) 0x0);
+				//Block block = player.getTargetBlock(hs, 200);
+				
+				Set<Material> transp = new HashSet<>();
+				transp.add(Material.AIR);
+
+				Block block = player.getTargetBlock(transp, 300);
+				
 				if (block != null) {
 					System.out.println("Shears used:" + player.getName() + " X:" + block.getX() + " Y:" + block.getY()
 							+ " Z:" + block.getZ());
@@ -1331,7 +1387,7 @@ public class MoveCraft_PlayerListener implements Listener {
 							+ "list the types of craft available");
 					player.sendMessage(ChatColor.YELLOW + "/[craft type] " + " : " + ChatColor.WHITE
 							+ "commands specific to the craft type try /ship help");
-					player.sendMessage(ChatColor.YELLOW + "/volume ## " + " : " + ChatColor.WHITE
+					player.sendMessage(ChatColor.YELLOW + "/engine ## " + " : " + ChatColor.WHITE
 							+ "set engine piston volume from 0-100");
 				}
 				
@@ -1646,7 +1702,7 @@ public class MoveCraft_PlayerListener implements Listener {
 				}
 				event.setCancelled(true);
 				return;
-			} else if (craftName.equalsIgnoreCase("volume")) {
+			} else if (craftName.equalsIgnoreCase("engine")) {
 				if (split.length == 2) {
 					float inValue = 1.0f;
 					try {
@@ -1661,7 +1717,7 @@ public class MoveCraft_PlayerListener implements Listener {
 						player.sendMessage("Invalid volume percent, use a number from 0 to 100");
 					}
 				} else {
-					player.sendMessage("Change engine volume with /volume <%> with % from 0 to 100");
+					player.sendMessage("Change engine volume with /engine <%> with % from 0 to 100");
 				}
 				
 				event.setCancelled(true);

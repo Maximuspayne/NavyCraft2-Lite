@@ -14,6 +14,7 @@ import java.util.Random;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -183,7 +184,18 @@ public class CraftMover {
 				block.setData((byte) dataBlock.data);
 			} else { // the block is already there, just set the data
 				Block theBlock = getWorldBlock(dx + dataBlock.x, dy + dataBlock.y, dz + dataBlock.z);
-				if (theBlock.getTypeId() == 23) {
+				if (theBlock.getType() == Material.SPONGE) //update pumps
+				{
+					Block oldBlock = getWorldBlock(dataBlock.x, dataBlock.y, dataBlock.z);
+					for( Pump p:craft.pumps ) {
+						if( oldBlock.getLocation().equals(p.loc) ) {
+							p.loc = theBlock.getLocation();
+						}
+					}
+					
+				}
+				
+				if (theBlock.getTypeId() == 23) { //move cannons
 
 					boolean stopSearch = false;
 					for (OneCannon onec : AimCannon.getCannons()) {
@@ -609,13 +621,15 @@ public class CraftMover {
 				}
 
 				if (solidCount > (int) (craft.sizeX * craft.sizeZ * 0.2f)) {
-					craft.doSink = true;
-					for (String s : craft.crewNames) {
-						Player p = plugin.getServer().getPlayer(s);
-						if (p != null) {
-							p.sendMessage(ChatColor.RED + "***We ran aground!***");
+					if( !craft.sinking ) {
+						craft.doSink = true;
+						for (String s : craft.crewNames) {
+							Player p = plugin.getServer().getPlayer(s);
+							if (p != null) {
+								p.sendMessage(ChatColor.RED + "***We ran aground!***");
+							}
+	
 						}
-
 					}
 				} else {
 					return craft.buoyancy;
@@ -951,6 +965,8 @@ public class CraftMover {
 		}
 
 		teleportUpdate();
+		
+		TeleportFix.updateNMSChunks(craft);
 
 		craft.minX += craft.dx;
 		craft.minY += craft.dy;
@@ -1033,10 +1049,10 @@ public class CraftMover {
 
 	public void delayed_move(int dx, int dy, int dz) {
 
-		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
+		//plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
 			if (NavyCraft.shutDown) { return; }
 			move(dx, dy, dz);
-		});
+		//});
 	}
 
 	public void delayed_move_collide(int dx, int dy, int dz) {
@@ -1047,7 +1063,7 @@ public class CraftMover {
 					if (e instanceof Player) {
 						Player p = (Player) e;
 						if (craft.submergedMode) {
-							p.playSound(p.getLocation(), Sound.ENTITY_BOBBER_SPLASH, 1.0f, 0.6f);
+							p.playSound(p.getLocation(), Sound.ENTITY_BOBBER_SPLASH, 0.5f + ((0.5f * craft.speed) / 12.0f), 0.6f);
 						} else {
 							p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SPLASH, 0.5f + ((0.5f * craft.speed) / 12.0f), 0.6f);
 						}
@@ -1066,6 +1082,7 @@ public class CraftMover {
 				move1();
 				move2();
 				move3(true);
+				
 			}
 			else {
 
@@ -1461,7 +1478,9 @@ public class CraftMover {
 		craft.blockDisplacement = 0.0f;
 		craft.ballastDisplacement = 0.0f;
 		craft.buoyancy = 0;
-
+		
+		craft.chunkList.clear();
+		
 		for (int y = 0; y < craft.sizeY; y++) {
 			for (int x = 0; x < craft.sizeX; x++) {
 				for (int z = 0; z < craft.sizeZ; z++) {
@@ -1472,8 +1491,37 @@ public class CraftMover {
 					if (!newBlock.getChunk().isLoaded()) {
 						newBlock.getChunk().load();
 					}
+					
+					if( !craft.chunkList.contains(newBlock.getChunk()) )
+						craft.chunkList.add(newBlock.getChunk());
 
 					if (craft.type.canNavigate || craft.type.canDive) {
+						if( newBlock.getType() == Material.SPONGE && newBlock.getData() == 1 ) //regenerate sponges
+						{
+							boolean pumpFound=false;
+							for(Pump p:craft.pumps) {
+								if( p.loc.equals(newBlock.getLocation()) && p.counter <= p.limit ) {
+									pumpFound=true;
+									craft.world.playSound(newBlock.getLocation(), Sound.ENTITY_BOBBER_SPLASH, 1.0f, 0.7f);
+									newBlock.setData((byte)0);
+									p.counter = p.counter+1;
+									if (p.counter > p.limit && craft.captainName != null) {
+										Player player = plugin.getServer().getPlayer(craft.captainName);
+										player.sendMessage("Pump expired!");
+									}
+									break;
+								}else if( p.loc.equals(newBlock.getLocation()) ) {
+									pumpFound=true;
+									break;
+								}
+									
+							}
+							if( !pumpFound ) {
+								craft.pumps.add(new Pump(newBlock.getLocation()));
+							}
+							
+						}
+						
 						if ((newBlock.getY() < 63) && !((blockId >= 8) && (blockId <= 11))) {
 							float yScale = craft.sizeY / 3.0f;
 							if ((blockId == 0) && (y < yScale)) {
@@ -1540,10 +1588,12 @@ public class CraftMover {
 							} else {
 								if (craftBlockId == 0) {
 									craft.matrix[x][y][z] = -1;
+									craft.world.playSound(newBlock.getLocation(), Sound.ENTITY_HOSTILE_SWIM, 0.4f, 0.5f);
 								}
 
 								if (scheduled && ((craft.buoyFloodTicker == 1) || (craft.buoyFloodTicker == 5))) {
 									newBlock.setTypeIdAndData(8, newBlock.getData(), true);
+
 								}
 							}
 						} else if (blockId == 8) {
@@ -1552,6 +1602,7 @@ public class CraftMover {
 							} else {
 								if (craftBlockId == 0) {
 									craft.matrix[x][y][z] = -1;
+									craft.world.playSound(newBlock.getLocation(), Sound.ENTITY_HOSTILE_SWIM, 0.4f, 0.5f);
 								}
 
 								if (scheduled && ((craft.buoyFloodTicker == 1) || (craft.buoyFloodTicker == 5))) {
@@ -1727,7 +1778,7 @@ public class CraftMover {
 					for (Entity e : craft.checkEntities) {
 						if (e instanceof Player) {
 							Player p = (Player) e;
-							p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SWIM, 0.6f, 0.4f + ((0.2f * craft.speed) / 12.0f));
+							p.playSound(p.getLocation(), Sound.ENTITY_GENERIC_SWIM, 0.4f, 0.4f + ((0.2f * craft.speed) / 12.0f));
 						}
 					}
 				}
@@ -2882,7 +2933,8 @@ public class CraftMover {
 				if (((System.currentTimeMillis() - craft.lastSonarPulse) / 1000) > 3) {
 
 					craft.lastSonarPulse = System.currentTimeMillis();
-
+					sonarPingThread(sign.getLocation());
+					
 					HashMap<Integer, String> bearings = new HashMap<>();
 					for (Craft c : Craft.craftList) {
 						if ((c != craft) && (c.world == craft.world) && !c.sinking && (c.type.canNavigate || c.type.canDive)) {
@@ -2890,7 +2942,7 @@ public class CraftMover {
 							float zDist = (c.minZ + (c.sizeZ / 2.0f)) - (craft.minZ + (craft.sizeZ / 2.0f));
 							float dist = (float) Math.sqrt((xDist * xDist) + (zDist * zDist));
 
-							if (dist < 200) {
+							if (dist < 300) {
 								double trueBearing = 0;
 								if ((xDist >= 0) && (zDist < 0)) {
 									double bear = Math.atan(xDist / (-zDist));
@@ -2958,9 +3010,9 @@ public class CraftMover {
 								}
 
 								String distanceStr = "";
-								if (dist < 25) {
+								if (dist < 50) {
 									distanceStr = "X";
-								} else if (dist < 50) {
+								} else if (dist < 100) {
 									distanceStr = "X";
 									float speedChance = 1 - (((float) craft.setSpeed / (float) craft.type.maxEngineSpeed) * .8f);
 									float depthChance;
@@ -2969,14 +3021,14 @@ public class CraftMover {
 									} else if ((craft.minY <= 15) && (c.minY > 15)) {
 										depthChance = 0;
 									} else {
-										depthChance = 1 - (((Math.abs(craft.minY - c.minY)) / 50.0f) * .4f);
+										depthChance = 1 - (((Math.abs(craft.minY - c.minY)) / 100.0f) * .4f);
 									}
 
 									float totalChance = depthChance * speedChance;
 									if (Math.random() > totalChance) {
 										continue;
 									}
-								} else if (dist < 75) {
+								} else if (dist < 200) {
 									distanceStr = "*";
 									float speedChance = 1 - ((float) craft.setSpeed / (float) craft.type.maxEngineSpeed);
 									float depthChance;
@@ -2985,7 +3037,7 @@ public class CraftMover {
 									} else if ((craft.minY <= 15) && (c.minY > 15)) {
 										depthChance = 0;
 									} else {
-										depthChance = 1 - (((Math.abs(craft.minY - c.minY)) / 50.0f) * .6f);
+										depthChance = 1 - (((Math.abs(craft.minY - c.minY)) / 200.0f) * .6f);
 									}
 
 									float totalChance = depthChance * speedChance;
@@ -3002,7 +3054,7 @@ public class CraftMover {
 									} else if ((craft.minY <= 15) && (c.minY > 15)) {
 										depthChance = 0;
 									} else {
-										depthChance = 1 - (((Math.abs(craft.minY - c.minY)) / 50.0f) * .6f);
+										depthChance = 1 - (((Math.abs(craft.minY - c.minY)) / 300.0f) * .6f);
 									}
 
 									float totalChance = distChance * depthChance * speedChance;
@@ -3020,6 +3072,20 @@ public class CraftMover {
 								} else {
 									bearings.put(relBearing, distanceStr);
 								}
+								
+								if( distanceStr.equalsIgnoreCase("X") ) {
+									sonarReturnThread(sign.getLocation(), 1.6f);
+									sonarReturnThread(c.getLocation(), 1.6f);
+								}else if( distanceStr.equalsIgnoreCase("*") ) {
+									sonarReturnThread(sign.getLocation(), 1.2f);
+									sonarReturnThread(c.getLocation(), 1.2f);
+								}else if( distanceStr.equalsIgnoreCase(".") ) {
+									sonarReturnThread(sign.getLocation(), 0.8f);
+									sonarReturnThread(c.getLocation(), 0.8f);
+								}else{
+									sonarReturnThread(c.getLocation(), 0.8f);
+								}
+								
 							}
 						}
 					}
@@ -4851,12 +4917,13 @@ public class CraftMover {
 						if (NavyCraft.shutDown) { return; }
 
 						if (!sinkUpdate) {
-							sinkUpdate(false);
+							sinkUpdate(false,i);
+							
 						}
 						sleep(sleepTime);
 						i++;
 					}
-					sinkUpdate(true);
+					sinkUpdate(true,i);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -4864,13 +4931,24 @@ public class CraftMover {
 		}.start();
 	}
 
-	public void sinkUpdate(final boolean lastRun) {
+	public void sinkUpdate(final boolean lastRun, final int i) {
 		plugin.getServer().getScheduler().scheduleSyncDelayedTask(plugin, () -> {
 			if (NavyCraft.shutDown) { return; }
 
 			if (craft != null) {
 				if (sinkUpdate) { return; }
+				
 				sinkUpdate = true;
+				if( i%4==0 ) {
+					craft.world.playSound(craft.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 2.0f, 0.7f);
+				}else if( i%4==1 ) {
+					craft.world.playSound(craft.getLocation(), Sound.BLOCK_PORTAL_AMBIENT, 2.0f, 0.7f);
+				}else if( i%4==2 ) {
+					craft.world.playSound(craft.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 2.0f, 0.7f);
+				}else if( i%4==3 ) {
+					craft.world.playSound(craft.getLocation(), Sound.BLOCK_PORTAL_TRIGGER, 2.0f, 0.7f);
+				}
+				
 				if ((craft.minY > 2) && checkSink()) {
 					if (!craft.type.canFly) {
 						move(0, -1, 0);
@@ -6594,12 +6672,16 @@ public class CraftMover {
 					int i = 0;
 					while (!stopSound && !c.isDestroying && !c.sinking) {
 						if (NavyCraft.shutDown) { return; }
-						if ((i % 4) == 0) {
+						/*if ((i % 4) == 0) {
 							sleep = (2000 - (int) ((1000 * (float) (c.setSpeed * Math.abs(c.gear))) / (c.type.maxEngineSpeed * c.type.maxForwardGear))) / 4;
 							if (c.type.canFly) {
 								sleep = (1000 - (int) ((500 * (float) (c.setSpeed * Math.abs(c.gear))) / (c.type.maxEngineSpeed * c.type.maxForwardGear))) / 4;
 							}
-						}
+						}*/
+						if (c.type.canFly)
+							sleep = 200;
+						else
+							sleep = 500;
 						sleep(sleep);
 						if (NavyCraft.shutDown) { return; }
 						soundUpdate(c, engineIndex, i);
@@ -6622,6 +6704,8 @@ public class CraftMover {
 
 			// return if engine not on
 			if ((engineIndex != -1) && (c.engineIDIsOn.containsKey(engineIndex) && (!c.engineIDIsOn.get(engineIndex) || (c.type.canFly && (c.driverName == null))))) {
+				if( c.type.canFly )
+					c.world.playSound(c.getLocation(), Sound.ENTITY_WITHER_AMBIENT, 0.3f, 0.5f);
 				return;
 			} else if ((engineIndex == -1) && (c.type.canFly && (c.driverName == null))) { return; }
 
@@ -6634,12 +6718,12 @@ public class CraftMover {
 			}
 
 			World cw = c.world;
-			float volume = ((float) (c.setSpeed * Math.abs(c.gear)) / (float) (c.type.maxEngineSpeed * c.type.maxForwardGear)) + 1.0f;
+			float volume = ((float) (c.setSpeed) / 6.0f) + 1.0f;
 
-			if (c.type.canFly) {
+			/*if (c.type.canFly) {
 				volume = ((2.0f * (c.setSpeed * Math.abs(c.gear))) / (c.type.maxEngineSpeed * c.type.maxForwardGear)) + 1.0f;
 
-			}
+			}*/
 
 			Location cLoc = null;
 
@@ -6651,166 +6735,54 @@ public class CraftMover {
 			// System.out.println("Play engine sound-" + engineIndex);
 			if (c.setSpeed > 0) {
 				if (noEngineLoc != null) {
-					float pitch3 = ((float) c.setSpeed / (float) c.type.maxEngineSpeed) + 0.5f;
+					float pitch3 = ((float) c.setSpeed / 6.0f) + 0.5f;
 					if ((i % 5) == 0) {
 
 						if (craft.type.canFly) {
-							cw.playSound(noEngineLoc, Sound.ENTITY_ARROW_HIT, volume, pitch3);
+							cw.playSound(noEngineLoc, Sound.ENTITY_WITHER_AMBIENT, volume*0.5f, 0.5f);
 						} else if (craft.type.isTerrestrial) {
 							cw.playSound(noEngineLoc, Sound.BLOCK_GRAVEL_STEP, volume, pitch3);
 						} else {
 							cw.playSound(noEngineLoc, Sound.BLOCK_WATER_AMBIENT, volume, pitch3);
 						}
 					}
-				} else if (c.submergedMode) {
-					float pitch4 = ((float) c.setSpeed / (float) c.type.maxEngineSpeed) + 0.5f;
-					if ((i % 2) == 0) {
-						cw.playSound(cLoc, Sound.BLOCK_WATER_AMBIENT, volume * 2, pitch4);
-					}
+				} else if (c.submergedMode && c.engineIDTypes.get(engineIndex) != 9 && c.engineIDTypes.get(engineIndex) != 1 ) {
+					float pitch4 = ((float) c.setSpeed / (float) 6.0f)*0.5f + 0.5f;
+					playEngineSound(cLoc, Sound.ENTITY_SKELETON_HORSE_DEATH, volume, pitch4);
 				} else {
-					float pitch1 = 1.0f;
-					float pitch2 = 2.0f;
 					int engType = c.engineIDTypes.get(engineIndex);
-					if (engType == 0) // Diesel 1
+					if (engType == 0 || engType == 2 || engType == 4) // Diesels
 					{
-						pitch1 = 0.8f;
-						pitch2 = 0.5f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 1) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						} else if (((i) % 4) == 2) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
-						} else if (((i) % 4) == 3) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
-						}
-					}
-					if (engType == 1) // Motor 1
+						float pitch = ((float) c.setSpeed / (float) 6.0f)*1.5f + 0.5f;
+						playEngineSound(cLoc, Sound.ENTITY_MINECART_INSIDE, volume, pitch);
+
+					}else if (engType == 1) // Motors
 					{
-						float pitch5 = ((float) c.setSpeed / (float) c.type.maxEngineSpeed) + 0.5f;
-						if ((i % 2) == 0) {
-							cw.playSound(cLoc, Sound.BLOCK_WATER_AMBIENT, volume, pitch5);
-						}
-					}
-					if (engType == 2) // Diesel 2
+						float pitch = ((float) c.setSpeed / (float) 6.0f)*0.5f + 0.5f;
+						playEngineSound(cLoc, Sound.ENTITY_SKELETON_HORSE_DEATH, volume, pitch);
+					}else if (engType == 3 || engType == 6 || engType == 7) // Boilers
 					{
-						pitch1 = 0.8f;
-						pitch2 = 0.5f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 1) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						} else if (((i) % 4) == 2) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
-						} else if (((i) % 4) == 3) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
-						}
-					}
-					if (engType == 3) // Boiler 1
+						float pitch = ((float) c.setSpeed / (float) 6.0f)*0.5f + 0.5f;
+						playEngineSound(cLoc, Sound.ENTITY_IRONGOLEM_HURT, volume, pitch);
+						playEngineSound(cLoc, Sound.ENTITY_POLAR_BEAR_WARNING, volume, 0.5f);
+					}else if (engType == 5 || engType == 8) // Gasolines
 					{
-						pitch1 = 0.6f;
-						pitch2 = 0.5f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 2) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						}
-					}
-					if (engType == 4) // Diesel 3
+						float pitch = ((float) c.setSpeed / (float) 6.0f)*1.0f + 1.0f;
+						playEngineSound(cLoc, Sound.ENTITY_MINECART_RIDING, volume, pitch);
+					}else if (engType == 9) // Nuclear
 					{
-						pitch1 = 0.8f;
-						pitch2 = 0.5f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 1) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						} else if (((i) % 4) == 2) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
-						} else if (((i) % 4) == 3) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
-						}
-					}
-					if (engType == 5) // Gasoline 1
+						float pitch = ((float) c.setSpeed / (float) 6.0f)*0.5f + 0.5f;
+						playEngineSound(cLoc, Sound.ENTITY_WITHER_SPAWN, volume, pitch);
+					}else if ((engType >= 10) && (engType <= 17)) // Airplanes
 					{
-						pitch1 = 1.2f;
-						pitch2 = 0.8f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 1) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						} else if (((i) % 4) == 2) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 3) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						}
-					}
-					if (engType == 6) // Boiler 2
+						float pitch = ((float) c.setSpeed / (float) 6.0f)*1.0f + 0.5f;
+						playEngineSound(cLoc, Sound.ENTITY_WOLF_GROWL, volume, pitch);
+						if( c.type.canFly && !c.onGround && i%3 == 0)
+							c.world.playSound(c.getLocation(), Sound.ENTITY_WITHER_AMBIENT, 0.3f, 0.5f);
+					}else if ((engType == 18) || (engType == 19)) // Tanks
 					{
-						pitch1 = 0.6f;
-						pitch2 = 0.5f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 2) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						}
-					}
-					if (engType == 7) // Boiler 3
-					{
-						pitch1 = 0.6f;
-						pitch2 = 0.5f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 2) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						}
-					}
-					if (engType == 8) // Gasoline 2
-					{
-						pitch1 = 1.4f;
-						pitch2 = 1.0f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 1) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						} else if (((i) % 4) == 2) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 3) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						}
-					}
-					if (engType == 9) // Nuclear
-					{
-						pitch1 = 0.6f;
-						pitch2 = 0.5f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
-						} else if (((i) % 4) == 2) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
-						}
-					}
-					if ((engType >= 10) && (engType <= 17)) // Airplanes
-					{
-						pitch1 = 1.4f;
-						pitch2 = 1.1f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 2) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch1);
-						} else if (((i) % 4) == 3) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
-						}
-					}
-					if ((engType == 18) || (engType == 19)) // Tanks
-					{
-						pitch1 = 0.8f;
-						pitch2 = 0.5f;
-						if (((i) % 4) == 0) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch1);
-						} else if (((i) % 4) == 1) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_EXTEND, volume, pitch2);
-						} else if (((i) % 4) == 3) {
-							playEngineSound(cLoc, Sound.BLOCK_PISTON_CONTRACT, volume, pitch2);
-						}
+						float pitch = ((float) c.setSpeed / (float) 6.0f)*0.3f + 0.5f;
+						playEngineSound(cLoc, Sound.ENTITY_STRAY_DEATH, volume, pitch);
 					}
 
 				}
@@ -6857,4 +6829,56 @@ public class CraftMover {
 		}
 		return false;
 	}
+	
+	public static void sonarPingThread(final Location loc) {
+		new Thread() {
+
+			@Override
+			public void run() {
+
+				setPriority(Thread.MIN_PRIORITY);
+
+				// taskNum = -1;
+				try {
+					World cw = loc.getWorld();
+					for (int i = 0; i < 2; i++) {
+						sleep(400);
+						if( i==0 )
+							cw.playSound(loc, Sound.BLOCK_NOTE_PLING, 0.7f, 1.6f);
+						else
+							cw.playSound(loc, Sound.BLOCK_NOTE_PLING, 0.7f, 2.0f);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}.start(); // , 20L);
+	}
+	public static void sonarReturnThread(final Location loc, float strength) {
+		new Thread() {
+
+			@Override
+			public void run() {
+
+				setPriority(Thread.MIN_PRIORITY);
+
+				// taskNum = -1;
+				try {
+					sleep(1000);
+					World cw = loc.getWorld();
+					for (int i = 0; i < 2; i++) {
+						if( i==0 )
+							cw.playSound(loc, Sound.BLOCK_NOTE_BELL, 0.7f, strength);
+						else
+							cw.playSound(loc, Sound.BLOCK_NOTE_BELL, 0.7f, strength + 0.4f);
+						sleep(400);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}.start(); // , 20L);
+	}
+	
+
 }

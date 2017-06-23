@@ -1677,6 +1677,7 @@ public class MoveCraft_BlockListener implements Listener {
 				event.setCancelled(true);
 			}
 
+			
 			if ((block.getTypeId() == 63) || (block.getTypeId() == 68) || (block.getTypeId() == 50) || (block.getTypeId() == 75) || (block.getTypeId() == 76) || (block.getTypeId() == 65) || (block.getTypeId() == 64) || (block.getTypeId() == 71) || (block.getTypeId() == 70) || (block.getTypeId() == 72) || (block.getTypeId() == 143)) {
 				Craft c = Craft.getCraft(block.getX(), block.getY(), block.getZ());
 				if (c != null) {

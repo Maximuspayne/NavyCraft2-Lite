@@ -75,6 +75,8 @@ public class NavyCraft extends JavaPlugin {
 	
 	public static ArrayList<Periscope> allPeriscopes = new ArrayList<Periscope>();
 	
+	public static HashMap<Player, Location> searchLightMap = new HashMap<Player, Location>();
+	
 	public static HashMap<Player, Block> playerLastBoughtSign = new HashMap<Player, Block>();
 	public static HashMap<Player, Integer> playerLastBoughtCost = new HashMap<Player, Integer>();
 	public static HashMap<Player, String> playerLastBoughtSignString0 = new HashMap<Player, String>();

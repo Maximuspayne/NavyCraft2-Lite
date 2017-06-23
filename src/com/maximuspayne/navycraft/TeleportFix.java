@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -65,5 +66,30 @@ public class TeleportFix implements Listener {
 		}
  
 		return res;
+	}
+	
+	public static void updateNMSChunks(Craft craft) {
+		String version;
+
+        version = Bukkit.getServer().getClass().getPackage().getName();
+        if (version.contains("v1_11")) {
+        	TeleportFix_1_11.updateNMSChunks(craft);
+
+        } else if (version.contains("v1_12")) {
+        	TeleportFix_1_12.updateNMSChunks(craft);
+        }
+		
+	}
+	
+	public static void updateNMSLight(Location light, Location oldLight) {
+		String version;
+
+        version = Bukkit.getServer().getClass().getPackage().getName();
+        if (version.contains("v1_11")) {
+        	TeleportFix_1_11.updateNMSLight(light, oldLight);
+
+        } else if (version.contains("v1_12")) {
+        	TeleportFix_1_12.updateNMSLight(light, oldLight);
+        }
 	}
 }
