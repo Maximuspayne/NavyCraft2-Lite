@@ -471,7 +471,19 @@ public class CraftRotator {
 
 							}
 							
-							
+							//check if sponge
+							if( dataBlock.id == 19)
+							{
+								Location spongeLoc = new Location(craft.world, dataBlock.x + craft.minX, dataBlock.y + craft.minY, dataBlock.z + craft.minZ);
+								for (Pump p :craft.pumps) 
+								{
+									if (spongeLoc.equals(p.loc)) 
+									{
+										p.loc = new Location(craft.world,x, y, z);
+									}
+								}
+
+							}
 							
 							dataBlock.x = x;
 							dataBlock.z = z;

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -77,7 +78,7 @@ public class Craft {
 	int sizeX, sizeZ, sizeY = 0;
 
 	// position of the craft on the map
-	World world;
+	public World world;
 	//int posX, posY, posZ;
 	int centerX, centerZ = -1;
 	
@@ -144,6 +145,10 @@ public class Craft {
 	public int uncreditedDamage = 0;
 	
 	public ArrayList<Periscope> periscopes = new ArrayList<Periscope>();
+	
+	public ArrayList<Pump> pumps = new ArrayList<Pump>();
+	
+	public ArrayList<Chunk> chunkList = new ArrayList<Chunk>();
 	
 	public int waitTorpLoading = 0;
 	
@@ -1487,6 +1492,7 @@ public class Craft {
 				{
 					player.sendMessage("Engines Flank!");
 				}
+				telegraphDingThread(player);
 			}
 		}
 	}
@@ -1867,5 +1873,27 @@ public class Craft {
 		    return false;  
 	   }
    }
+	public static void telegraphDingThread(final Player player) {
+		new Thread() {
 
+			@Override
+			public void run() {
+
+				setPriority(Thread.MIN_PRIORITY);
+
+				// taskNum = -1;
+				try {
+					World cw = player.getWorld();
+					Location loc = player.getLocation();
+					for (int i = 0; i < 2; i++) {
+						sleep(200);
+						cw.playSound(loc, Sound.BLOCK_ANVIL_PLACE, 1.0f, 1.9f);
+
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}.start(); // , 20L);
+	}
 }

@@ -33,7 +33,7 @@ public class BlocksInfo {
 		blocks[16] = new BlockInfo(16,"charcoal", false, false, false, 263, 1, false);
 		blocks[17] = new BlockInfo(17,"trunk", true, false, false, false);
 		blocks[18] = new BlockInfo(18,"leaves", true, false, false, -1, 0, false);
-		blocks[19] = new BlockInfo(19,"sponge", false, false, false, false);
+		blocks[19] = new BlockInfo(19,"sponge", true, false, false, false);
 		blocks[20] = new BlockInfo(20,"glass", false, false, false, -1, 0, false);
 		blocks[21] = new BlockInfo(21,"lapis ore", false, false, false, 21, 0, false);
 		blocks[22] = new BlockInfo(22,"lapis block", false, false, false, 22, 0, false);

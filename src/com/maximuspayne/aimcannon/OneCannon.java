@@ -7,6 +7,7 @@ import java.util.Iterator;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Dispenser;
@@ -1691,7 +1692,7 @@ public class OneCannon{
     	nc.getServer().getScheduler().scheduleSyncDelayedTask(nc, new Runnable(){
     	//new Thread() {
 	  //  @Override
-	    @SuppressWarnings("deprecation")
+	    @SuppressWarnings({ "deprecation", "unused" })
 		public void run()
 	    {
 
@@ -1699,6 +1700,7 @@ public class OneCannon{
 	    	{
 		    	if( torp.warhead.getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -1).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -2).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -3).getTypeId() == 35 )
 		    	{
+		    		firingCraft.world.playSound(torp.warhead.getLocation(), Sound.ENTITY_PLAYER_BREATH, 2.0f, 0.8f);
 		    		
 					if( i > 15 )
 					{
@@ -2437,7 +2439,7 @@ public class OneCannon{
     	nc.getServer().getScheduler().scheduleSyncDelayedTask(nc, new Runnable(){
     	//new Thread() {
 	  //  @Override
-	    @SuppressWarnings("deprecation")
+	    @SuppressWarnings({ "deprecation", "unused" })
 		public void run()
 	    {
 	    	//getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
@@ -2449,7 +2451,7 @@ public class OneCannon{
 	    	{
 		    	if( torp.warhead.getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -1).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -2).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -3).getTypeId() == 35 )
 		    	{
-		    		
+		    		firingCraft.world.playSound(torp.warhead.getLocation(), Sound.ENTITY_PLAYER_BREATH, 2.0f, 0.8f);
 					if( i > 15 )
 					{
 						if( torp.warhead.getY() > 62 )
@@ -3179,7 +3181,7 @@ public class OneCannon{
     	nc.getServer().getScheduler().scheduleSyncDelayedTask(nc, new Runnable(){
     	//new Thread() {
 	  //  @Override
-	    @SuppressWarnings("deprecation")
+	    @SuppressWarnings({ "deprecation", "unused" })
 		public void run()
 	    {
 
@@ -3187,7 +3189,7 @@ public class OneCannon{
 	    	{
 		    	if( torp.warhead.getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -1).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -2).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -3).getTypeId() == 35 )
 		    	{
-		    		
+		    		firingCraft.world.playSound(torp.warhead.getLocation(), Sound.ENTITY_PLAYER_BREATH, 2.0f, 0.8f);
 					if( i > 15 )
 					{
 						if( torp.warhead.getY() > 62 )
@@ -4805,7 +4807,7 @@ public class OneCannon{
 						dc.warhead.getRelative(BlockFace.DOWN).setTypeIdAndData(35, (byte) 0x8, false);
 						dc.warhead.getRelative(BlockFace.DOWN,2).setTypeIdAndData(35, (byte) 0x8, false);
 					}
-					dc.warhead = dc.warhead.getRelative(BlockFace.DOWN,2);
+					dc.warhead = dc.warhead.getRelative(BlockFace.DOWN,1);
 						
 				}
 
