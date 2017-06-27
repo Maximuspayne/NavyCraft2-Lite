@@ -276,10 +276,10 @@ public class Craft {
 	public float minDispValue = 0.33f;
 	
 	public float ballastDisplacement = 0.0f;
-	public int ballastAirPercent=100;
+	public int ballastAirPercent=50;
 	public int ballastMode=0; //0 closed, 1 flood, 2 blow, 3 auto equalize
 	
-	
+	public float lastDisplacement=0;
 	
 	//public int moveTicker = 0;
 

@@ -22,6 +22,8 @@ public class CraftRotator {
 	public int newMinX, newMinZ, newOffX, newOffZ;
 	
 	HashMap<Location,Location> cannonLocs;  //newLocCraftcoord, oldLoc world coord
+	
+	HashMap<Location,Location> spongeLocs;  //newLocCraftcoord, oldLoc world coord
 
     //offset between the craft origin and the pivot for rotation
 
@@ -29,6 +31,7 @@ public class CraftRotator {
 		craft = c;
 		plugin = p;
 		cannonLocs = new HashMap<Location,Location>();
+		spongeLocs = new HashMap<Location,Location>();
 		if(craft.offX == 0 || craft.offZ == 0) {
 			craft.offX = Math.round(craft.sizeX / 2);
 			craft.offZ = Math.round(craft.sizeZ / 2);
@@ -398,6 +401,8 @@ public class CraftRotator {
 		dr = (dr + 360) % 360;
 
 		CraftMover cm = new CraftMover(craft, plugin);
+		
+		spongeLocs.clear();
 
 		//rotate dimensions
 		Vector newSize = this.getCraftSize().clone();
@@ -471,19 +476,23 @@ public class CraftRotator {
 
 							}
 							
-							//check if sponge
+							
+							///check if sponge pump
 							if( dataBlock.id == 19)
 							{
 								Location spongeLoc = new Location(craft.world, dataBlock.x + craft.minX, dataBlock.y + craft.minY, dataBlock.z + craft.minZ);
-								for (Pump p :craft.pumps) 
+								for (Pump p : craft.pumps) 
 								{
-									if (spongeLoc.equals(p.loc)) 
+									if (p.loc.equals(spongeLoc)) 
 									{
-										p.loc = new Location(craft.world,x, y, z);
+										spongeLocs.put(new Location(craft.world,x, y, z),spongeLoc);
+										break;
 									}
 								}
 
 							}
+							
+							
 							
 							dataBlock.x = x;
 							dataBlock.z = z;
@@ -915,7 +924,27 @@ public class CraftRotator {
 				block.setData((byte) dataBlock.data);
 			} else { //the block is already there, just set the data
 				Block theBlock = getWorldBlock(dx + dataBlock.x, dy + dataBlock.y, dz + dataBlock.z);
-				if( theBlock.getTypeId() == 23)
+				
+				if( dataBlock.id == 19)//check if sponge
+				{
+					Location testLoc = new Location(craft.world, dataBlock.x,dataBlock.y,dataBlock.z);
+					Location oldLoc=null;
+					if( spongeLocs.containsKey(testLoc) ) {
+						oldLoc = spongeLocs.get(testLoc);
+					}else{
+						continue;
+					}
+					
+					for (Pump p :craft.pumps) 
+					{
+						if (oldLoc.equals(p.loc)) 
+						{
+							p.loc = theBlock.getLocation();
+						}
+					}
+				}
+				
+				if( theBlock.getTypeId() == 23) //cannon block
 				{
 					OneCannon oc = new OneCannon(theBlock.getLocation(), NavyCraft.instance);
 					if (oc.isValidCannon(theBlock)) 

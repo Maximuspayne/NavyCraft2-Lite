@@ -4784,9 +4784,7 @@ public class OneCannon{
 						}
 					}
 					
-					if( checkCraft == null )
-						p.sendMessage("Depth Charge hit unknown object!");
-					else
+					if( checkCraft != null )
 						p.sendMessage("Depth Charge hit " + checkCraft.name + "!");
 					
 							
