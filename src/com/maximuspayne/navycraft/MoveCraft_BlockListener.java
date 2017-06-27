@@ -34,6 +34,7 @@ import org.bukkit.inventory.ItemStack;
 import com.earth2me.essentials.Essentials;
 import com.maximuspayne.aimcannon.AimCannonPlayerListener;
 import com.maximuspayne.navycraft.plugins.PermissionInterface;
+import com.maximuspayne.navycraft.shipyard.Shipyard;
 import com.sk89q.worldedit.CuboidClipboard;
 import com.sk89q.worldedit.EditSession;
 import com.sk89q.worldedit.EmptyClipboardException;
@@ -59,12 +60,14 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 public class MoveCraft_BlockListener implements Listener {
 	public static Craft updatedCraft = null;
 	private static NavyCraft plugin;
+	public static Shipyard syp;
 	public static WorldEditPlugin wep;
 	public static WorldGuardPlugin wgp;
 	public static int lastSpawn = -1;
 
 	public MoveCraft_BlockListener(NavyCraft p) {
 		plugin = p;
+		syp = (Shipyard) p.getServer().getPluginManager().getPlugin("NavyCraft-Shipyard");
 	}
 
 	@EventHandler(priority = EventPriority.HIGH)
@@ -298,6 +301,11 @@ public class MoveCraft_BlockListener implements Listener {
 			} else {
 				player.sendMessage("Sign error...check second sign?");
 				return;
+			}
+		} else if (craftTypeName.equalsIgnoreCase("*claim*") && (block.getRelative(BlockFace.DOWN, 1).getTypeId() == 22)) {
+			syp = (Shipyard)plugin.getServer().getPluginManager().getPlugin("NavyCraft-Shipyard");
+			if( syp != null ) {
+				syp.clickedClaimSign(sign, player);
 			}
 		} else if (craftTypeName.equalsIgnoreCase("*recall*") && (block.getRelative(BlockFace.DOWN, 1).getTypeId() == 22)) {
 			int xCord = 0;
@@ -1526,6 +1534,13 @@ public class MoveCraft_BlockListener implements Listener {
 			event.setCancelled(true);
 			return;
 		}
+		
+		if (!player.isOp() && craftType != null && craftType.adminBuild && !PermissionInterface.CheckPerm(player, "navycraft.admin") ) {
+			player.sendMessage("You don't have permission to create this type of sign!");
+			event.setCancelled(true);
+			return;
+		}
+		
 
 		Craft theCraft = Craft.getPlayerCraft(event.getPlayer());
 		// System.out.println("Updated craft is " + updatedCraft.name + " of type " + updatedCraft.type.name);

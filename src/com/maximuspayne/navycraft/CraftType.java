@@ -22,6 +22,8 @@ public class CraftType {
 	int maxBlocks = 500;
 	int maxSpeed = 4;
 	int discount = 0;
+	
+	boolean adminBuild=false;
 
 	//int flyBlockType = 0;	//type of stone needed to make the vehicle fly
 	int digBlockId = 0;		//the type of block needed to make the vehicle able to drill through terrain
@@ -200,6 +202,7 @@ public class CraftType {
 			craftType.maxEngineSpeed = 8;
 			craftType.maxForwardGear = 3;
 			craftType.discount = 100;
+			craftType.adminBuild = true;
 			//craftType.sayOnControl = "You're on a ship !";
 			//craftType.sayOnRelease = "You release the helm";
 			
@@ -222,6 +225,7 @@ public class CraftType {
 			craftType.maxEngineSpeed = 8;
 			craftType.maxForwardGear = 2;
 			craftType.discount = 50;
+			craftType.adminBuild = true;
 			//craftType.sayOnControl = "You're on a ship !";
 			//craftType.sayOnRelease = "You release the helm";
 			
@@ -328,6 +332,8 @@ public class CraftType {
 			craftType.maxSpeed = Integer.parseInt(value);
 		else if (attribute.equalsIgnoreCase("discount"))
 			craftType.discount = Integer.parseInt(value);
+		else if (attribute.equalsIgnoreCase("adminBuild"))
+			craftType.adminBuild = Boolean.parseBoolean(value);
 		/*else if (attribute.equalsIgnoreCase("flyBlockType"))
 			craftType.flyBlockType = Integer.parseInt(value);
 		else if (attribute.equalsIgnoreCase("flyBlockPercent"))
@@ -505,6 +511,7 @@ public class CraftType {
 			
 			writeAttribute(writer, "maxSpeed", craftType.maxSpeed, force);
 			writeAttribute(writer, "discount", craftType.discount, force);
+			writeAttribute(writer, "adminBuild", craftType.adminBuild, force);
 			//writeAttribute(writer, "flyBlockType", craftType.flyBlockType, force);
 			//writeAttribute(writer, "flyBlockPercent", craftType.flyBlockPercent, force);
 			writeAttribute(writer, "digBlockId", craftType.digBlockId, force);

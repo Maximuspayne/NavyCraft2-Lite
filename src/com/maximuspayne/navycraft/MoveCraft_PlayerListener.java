@@ -46,6 +46,7 @@ import com.maximuspayne.aimcannon.AimCannonPlayerListener;
 import com.maximuspayne.aimcannon.OneCannon;
 import com.maximuspayne.aimcannon.Weapon;
 import com.maximuspayne.navycraft.plugins.PermissionInterface;
+import com.maximuspayne.navycraft.shipyard.Shipyard;
 import com.sk89q.worldedit.bukkit.WorldEditPlugin;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
@@ -57,6 +58,7 @@ import net.ess3.api.MaxMoneyException;
 public class MoveCraft_PlayerListener implements Listener {
 
 	public Plugin plugin;
+	public static Shipyard syp;
 	public WorldGuardPlugin wgp;
 	public WorldEditPlugin wep;
 
@@ -122,6 +124,12 @@ public class MoveCraft_PlayerListener implements Listener {
 			Craft.reboardNames.remove(player.getName());
 
 		}
+		
+		syp = (Shipyard)plugin.getServer().getPluginManager().getPlugin("NavyCraft-Shipyard");
+		if( syp != null )
+		{
+			syp.playerJoin(player);
+		}
 
 	}
 
@@ -139,8 +147,16 @@ public class MoveCraft_PlayerListener implements Listener {
 				Player p = plugin.getServer().getPlayer(msgWords[4]);
 				if ((p != null) && PermissionInterface.CheckEnabledWorld(p.getLocation())) {
 					int newExp = 100;
+					
 					plugin.getServer().broadcastMessage(ChatColor.GREEN + p.getName() + " receives " + ChatColor.YELLOW
 							+ newExp + ChatColor.GREEN + " rank points!");
+					
+					syp = (Shipyard)plugin.getServer().getPluginManager().getPlugin("NavyCraft-Shipyard");
+					if( syp != null ) {
+						syp.rewardExpPlayer(newExp, p);
+						syp.checkRankWorld(p, newExp, p.getWorld());
+						syp.saveExperience();
+					}
 				}
 			}
 		}
@@ -292,13 +308,26 @@ public class MoveCraft_PlayerListener implements Listener {
 				Block block = event.getClickedBlock();
 				NavyCraft.instance.DebugMessage("The action has a block " + block + " associated with it.", 4);
 
-				if ((block.getTypeId() == 63) || (block.getTypeId() == 68)) {
+				if ((block.getTypeId() == 63) || (block.getTypeId() == 68) && event.getHand() == EquipmentSlot.HAND) {
 					MoveCraft_BlockListener.ClickedASign(player, block, false);
 					return;
 				}
+				
+				if( block.getType() == Material.SPONGE && event.getHand() == EquipmentSlot.HAND) {
+					Craft testCraft = Craft.getCraft(block.getX(), block.getY(), block.getZ());
+					if (testCraft != null) {
+						for(Pump p: testCraft.pumps)
+						{
+							if( p.loc.equals(block.getLocation())) {
+								player.sendMessage("Pump has " + (p.limit - p.counter) + " charges left.");
+								break;
+							}
+						}
+					}				
+				}
 
 				
-				if( block.getType() == Material.JACK_O_LANTERN ) {
+				if( block.getType() == Material.JACK_O_LANTERN && event.getHand() == EquipmentSlot.HAND ) {
 					if (!PermissionInterface.CheckPerm(player, "navycraft.basic")) {
 						player.sendMessage(ChatColor.RED + "You do not have permission to use this.");
 						return;
@@ -318,7 +347,7 @@ public class MoveCraft_PlayerListener implements Listener {
 				}
 				
 				
-				if ((block.getTypeId() == 69) && (block.getRelative(BlockFace.DOWN, 1).getTypeId() == 68)) {
+				if ((block.getTypeId() == 69) && (block.getRelative(BlockFace.DOWN, 1).getTypeId() == 68) && event.getHand() == EquipmentSlot.HAND) {
 					Craft testCraft = Craft.getCraft(block.getX(), block.getY(), block.getZ());
 					if (testCraft != null) {
 						Sign sign = (Sign) block.getRelative(BlockFace.DOWN, 1).getState();
@@ -421,7 +450,7 @@ public class MoveCraft_PlayerListener implements Listener {
 			}
 		}
 
-		if ((action == Action.LEFT_CLICK_BLOCK) && event.hasBlock()) {
+		if ((action == Action.LEFT_CLICK_BLOCK) && event.hasBlock() && event.getHand() == EquipmentSlot.HAND ) {
 			Block block = event.getClickedBlock();
 			if ((block.getTypeId() == 63) || (block.getTypeId() == 68)) {
 				MoveCraft_BlockListener.ClickedASign(player, block, true);
@@ -430,7 +459,7 @@ public class MoveCraft_PlayerListener implements Listener {
 		}
 
 		// fire airplane gun
-		if ((action == Action.LEFT_CLICK_AIR) && (player.getItemInHand().getType() == Material.GOLD_SWORD)) {
+		if ((action == Action.LEFT_CLICK_AIR) && (player.getItemInHand().getType() == Material.GOLD_SWORD)&& event.getHand() == EquipmentSlot.HAND ) {
 			Craft testCraft = Craft.getPlayerCraft(event.getPlayer());
 			if ((testCraft != null) && (testCraft.driverName == player.getName()) && testCraft.type.canFly
 					&& !testCraft.sinking && !testCraft.helmDestroyed) {
@@ -450,7 +479,7 @@ public class MoveCraft_PlayerListener implements Listener {
 
 		// AA Gunner...
 		if ((action == Action.LEFT_CLICK_AIR) && NavyCraft.aaGunnersList.contains(player)
-				&& (player.getItemInHand().getType() == Material.BLAZE_ROD)) {
+				&& (player.getItemInHand().getType() == Material.BLAZE_ROD)&& event.getHand() == EquipmentSlot.HAND) {
 			Egg newEgg = player.launchProjectile(Egg.class);
 			newEgg.setVelocity(newEgg.getVelocity().multiply(1.5f));
 			NavyCraft.explosiveEggsList.add(newEgg);
@@ -471,7 +500,7 @@ public class MoveCraft_PlayerListener implements Listener {
 		
 		// Search light
 		if ((action == Action.LEFT_CLICK_AIR) && NavyCraft.searchLightMap.containsKey(player)
-				&& (player.getItemInHand().getType() == Material.BLAZE_ROD)) {
+				&& (player.getItemInHand().getType() == Material.BLAZE_ROD)&& event.getHand() == EquipmentSlot.HAND) {
 			Set<Material> transp = new HashSet<>();
 			transp.add(Material.AIR);
 			Block block=null;
@@ -1100,7 +1129,8 @@ public class MoveCraft_PlayerListener implements Listener {
 			/*if (!PermissionInterface.CheckPermission(player, "navycraft." + event.getMessage().substring(1))) {
 				return;
 			}*/
-
+			if (split[0].equalsIgnoreCase("movecraft"))
+				player.sendMessage(ChatColor.RED + "You mean /navycraft....also /nc works!");
 			if (split.length >= 2) {
 				if (split[1].equalsIgnoreCase("types")) {
 					if( !PermissionInterface.CheckPerm(player, "navycraft.basic") )
@@ -1488,6 +1518,15 @@ public class MoveCraft_PlayerListener implements Listener {
 				}
 				event.setCancelled(true);
 				return;
+			} else if (craftName.equalsIgnoreCase("shipyard") || craftName.equalsIgnoreCase("yard")) {
+				syp = (Shipyard)plugin.getServer().getPluginManager().getPlugin("NavyCraft-Shipyard");
+				if( syp != null ) {
+					syp.onPlayerCommandPreprocess(event);
+				}else {
+					player.sendMessage("Shipyard function is not installed.");
+				}
+				event.setCancelled(true);
+				return;
 			} else if (craftName.equalsIgnoreCase("radio") || craftName.equalsIgnoreCase("ra")) {
 				Craft craft = Craft.getPlayerCraft(player);
 				if (craft == null) {
@@ -1730,7 +1769,25 @@ public class MoveCraft_PlayerListener implements Listener {
 							inValue = Float.parseFloat(split[1]);
 							if ((inValue >= 1) && (inValue <= 100.0f)) {
 								NavyCraft.explosion((int)inValue, player.getLocation().getBlock(),false);
-								player.sendMessage("Boom Level - " + inValue);
+								Craft checkCraft=null;
+								checkCraft = NavyCraft.instance.entityListener.structureUpdate(player.getLocation(), player);
+								if( checkCraft == null ) {
+									checkCraft = NavyCraft.instance.entityListener.structureUpdate(player.getLocation().getBlock().getRelative(7,7,7).getLocation(), player);
+									if( checkCraft == null ) {
+										checkCraft = NavyCraft.instance.entityListener.structureUpdate(player.getLocation().getBlock().getRelative(-7,-7,-7).getLocation(), player);
+										if( checkCraft == null ) {
+											checkCraft = NavyCraft.instance.entityListener.structureUpdate(player.getLocation().getBlock().getRelative(3,-2,-3).getLocation(), player);
+											if( checkCraft == null ) {
+												checkCraft = NavyCraft.instance.entityListener.structureUpdate(player.getLocation().getBlock().getRelative(-3,2,3).getLocation(), player);
+											}
+										}
+									}
+								}
+								
+								if( checkCraft == null )
+									player.sendMessage("Boom Level - " + inValue);
+								else
+									player.sendMessage("Boom level - " + inValue + " done on " + checkCraft.name);
 							} else {
 								player.sendMessage("Invalid explosion level, use a number from 1 to 100");
 							}
@@ -1768,6 +1825,16 @@ public class MoveCraft_PlayerListener implements Listener {
 					player.sendMessage("You do not have permission to use that.");
 				}
 				
+				event.setCancelled(true);
+				return;
+			} else if (craftName.equalsIgnoreCase("rank")) {
+				syp = (Shipyard)plugin.getServer().getPluginManager().getPlugin("NavyCraft-Shipyard");
+				if( syp != null ){
+					
+						syp.getRank(player);
+				} else {
+					player.sendMessage("Shipyard and rank system not installed.");
+				}
 				event.setCancelled(true);
 				return;
 			} else if (craftType != null) {
