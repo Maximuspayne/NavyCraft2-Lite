@@ -116,7 +116,7 @@ public class Craft {
 	int offX, offZ = 0;
 	/* End Rotation */
 
-	public MoveCraft_Timer timer = null;
+	public NavyCraft_Timer timer = null;
 	boolean isPublic = false;
 	public boolean inHyperSpace = false;
 	public int HyperSpaceMoves[] = new int[3];
@@ -1242,7 +1242,7 @@ public class Craft {
 		}else if( blockID == 1 || blockID == 4 || blockID == 23 || blockID == 41 || blockID == 42 || blockID == 48 || blockID == 57
 				|| blockID == 67 || blockID == 71 || blockID == 86 || blockID == 98 || blockID == 109 || blockID == 112 
 				|| blockID == 114 || blockID == 121 || blockID == 122 || blockID == 133 || blockID == 139 || blockID == 155 
-				|| blockID == 156 || blockID == 159 || blockID == 172 )
+				|| blockID == 156 || blockID == 159 || blockID == 172 || blockID == 251 || (blockID >= 235 && blockID <= 250))
 		{
 			return 2;
 		}else if( blockID == 2 || blockID == 3 || blockID == 5 || blockID == 12 || blockID == 13 || blockID == 14 || blockID == 15 || blockID == 16 
@@ -1275,11 +1275,11 @@ public class Craft {
 				|| blockID == 24 || blockID == 29 || blockID == 33 || blockID == 41  || blockID == 42 || blockID == 45 || blockID == 46 || blockID == 48 || blockID == 57 || blockID == 60 || blockID == 61 || blockID == 62   
 				|| blockID == 67 || blockID == 71 || blockID == 78 || blockID == 79 || blockID == 80 || blockID == 82 || blockID == 86 || blockID == 98
 				|| blockID == 108 || blockID == 109 || blockID == 110 || blockID == 112 || blockID == 114 || blockID == 116 || blockID == 120 || blockID == 121 || blockID == 128 || blockID == 129  || blockID == 133
-				|| blockID == 138 || blockID == 139 || blockID == 145 || blockID == 152 || blockID == 154 || blockID == 155 || blockID == 156 || blockID == 158 || blockID == 159 || blockID == 172 )
+				|| blockID == 138 || blockID == 139 || blockID == 145 || blockID == 152 || blockID == 154 || blockID == 155 || blockID == 156 || blockID == 158 || blockID == 251 || (blockID >= 235 && blockID <= 250) )
 		{
 			return 1.0f;
 		}else if(  blockID == 19 || blockID == 43 || blockID == 54 || blockID == 58 || blockID == 64 || blockID == 91 || blockID == 96 || blockID == 101 || blockID == 113 
-				|| blockID == 117 || blockID == 118 || blockID == 137 || blockID == 153 || blockID == 170 || blockID == 173 )
+				|| blockID == 117 || blockID == 118 || blockID == 137 || blockID == 153 || blockID == 170 || blockID == 173 || blockID == 159 || blockID == 172 )
 		{
 			return 0.5f;
 		}else if( blockID == 5 || blockID == 14 || blockID == 15 || blockID == 16 || blockID == 17 || blockID == 21 || blockID == 25 || blockID == 44 || blockID == 47 

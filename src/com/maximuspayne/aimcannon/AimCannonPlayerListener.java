@@ -8,6 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 
 import com.maximuspayne.navycraft.NavyCraft;
 
@@ -15,6 +16,10 @@ public class AimCannonPlayerListener implements Listener {
     public static AimCannon plugin;
 
     public static void onPlayerInteract(PlayerInteractEvent event) {
+    	
+    	
+    	if (event.getHand() != EquipmentSlot.HAND)
+    		return;
     	
     ///////stone button
 	if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_BLOCK ) {
