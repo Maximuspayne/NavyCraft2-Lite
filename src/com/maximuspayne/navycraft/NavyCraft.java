@@ -59,10 +59,10 @@ public class NavyCraft extends JavaPlugin {
 	public static HashMap<UUID, Player> shotTNTList = new HashMap<UUID, Player>();
 	
 	
-	public final MoveCraft_PlayerListener playerListener = new MoveCraft_PlayerListener(this);
-	public final MoveCraft_BlockListener blockListener = new MoveCraft_BlockListener(this);
-	public final MoveCraft_EntityListener entityListener = new MoveCraft_EntityListener(this);
-	public final MoveCraft_InventoryListener inventoryListener = new MoveCraft_InventoryListener(this);
+	public final NavyCraft_PlayerListener playerListener = new NavyCraft_PlayerListener(this);
+	public final NavyCraft_BlockListener blockListener = new NavyCraft_BlockListener(this);
+	public final NavyCraft_EntityListener entityListener = new NavyCraft_EntityListener(this);
+	public final NavyCraft_InventoryListener inventoryListener = new NavyCraft_InventoryListener(this);
 	
 	public static ArrayList<String> playerKits = new ArrayList<String>();
 	
@@ -693,7 +693,7 @@ public class NavyCraft extends JavaPlugin {
 		    	if( NavyCraft.shutDown )
 					return;
 		    	
-		    	MoveCraft_BlockListener.autoSpawnSign(null, "");
+		    	NavyCraft_BlockListener.autoSpawnSign(null, "");
 		    }
     	}
     	);

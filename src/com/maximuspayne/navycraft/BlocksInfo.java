@@ -9,7 +9,7 @@ import org.bukkit.Material;
  */
 public class BlocksInfo {
 
-	public static BlockInfo[] blocks = new BlockInfo[255];
+	public static BlockInfo[] blocks = new BlockInfo[256];
 
 	public static void loadBlocksInfo() {
 
@@ -201,6 +201,62 @@ public class BlocksInfo {
 		blocks[195] = new BlockInfo(195,"jungle wooden door", true, true, false, 5, 3, false);
 		blocks[196] = new BlockInfo(196,"acacia wooden door", true, true, false, 5, 3, false);
 		blocks[197] = new BlockInfo(197,"dark oak wooden door", true, true, false, 5, 3, false);
+		blocks[198] = new BlockInfo(198,"end rod", false, false, false, false);
+		blocks[199] = new BlockInfo(199,"chorus plant", false, false, false, false);
+		blocks[200] = new BlockInfo(200,"chorus flower", false, false, false, false);
+		blocks[201] = new BlockInfo(201,"purpur block", false, false, false, false);
+		blocks[202] = new BlockInfo(202,"purpur pillar", false, false, false, false);
+		blocks[203] = new BlockInfo(203,"purpur stairs", true, false, false, false);
+		blocks[204] = new BlockInfo(204,"purpur double slabs", true, false, false, 205, 2, false);
+		blocks[205] = new BlockInfo(205,"purpur slab", true, false, false, false);
+		blocks[206] = new BlockInfo(206,"endstone bricks", false, false, false, false);
+		blocks[207] = new BlockInfo(207,"beetroot", true, true, false, false);
+		blocks[208] = new BlockInfo(208,"grass path", false, false, false, false);
+		blocks[209] = new BlockInfo(209,"end gateway", true, true, false, false);
+		blocks[210] = new BlockInfo(210,"repeating command block", true, false, true, false);
+		blocks[211] = new BlockInfo(211,"chain command block", true, false, true, false);
+		blocks[212] = new BlockInfo(212,"frosted ice", true, false, false, false);
+		blocks[213] = new BlockInfo(213,"magma block", false, false, false, false);
+		blocks[214] = new BlockInfo(214,"nether wart block", false, false, false, false);
+		blocks[215] = new BlockInfo(215,"red nether brick", false, false, false, false);
+		blocks[216] = new BlockInfo(216,"bone block", false, false, false, false);
+		blocks[217] = new BlockInfo(217,"structure void", true, false, false, false);
+		blocks[218] = new BlockInfo(218,"observer", true, false, false, false);
+		blocks[219] = new BlockInfo(219,"white shulker", true, false, true, false);
+		blocks[220] = new BlockInfo(220,"orange shulker", true, false, true, false);
+		blocks[221] = new BlockInfo(221,"magenta shulker", true, false, true, false);
+		blocks[222] = new BlockInfo(222,"light blue shulker", true, false, true, false);
+		blocks[223] = new BlockInfo(223,"yellow shulker", true, false, true, false);
+		blocks[224] = new BlockInfo(224,"lime shulker", true, false, true, false);
+		blocks[225] = new BlockInfo(225,"pink shulker", true, false, true, false);
+		blocks[226] = new BlockInfo(226,"gray shulker", true, false, true, false);
+		blocks[227] = new BlockInfo(227,"light gray shulker", true, false, true, false);
+		blocks[228] = new BlockInfo(228,"cyan shulker", true, false, true, false);
+		blocks[229] = new BlockInfo(229,"purple shulker", true, false, true, false);
+		blocks[230] = new BlockInfo(230,"blue shulker", true, false, true, false);
+		blocks[231] = new BlockInfo(231,"brown shulker", true, false, true, false);
+		blocks[232] = new BlockInfo(232,"green shulker", true, false, true, false);
+		blocks[233] = new BlockInfo(233,"red shulker", true, false, true, false);
+		blocks[234] = new BlockInfo(234,"black shulker", true, false, true, false);
+		blocks[235] = new BlockInfo(235,"white glazed terracota", true, false, false, false);
+		blocks[236] = new BlockInfo(236,"orange glazed terracota", true, false, false, false);
+		blocks[237] = new BlockInfo(237,"magenta glazed terracota", true, false, false, false);
+		blocks[238] = new BlockInfo(238,"lightblue glazed terracota", true, false, false, false);
+		blocks[239] = new BlockInfo(239,"yellow glazed terracota", true, false, false, false);
+		blocks[240] = new BlockInfo(240,"lime glazed terracota", true, false, false, false);
+		blocks[241] = new BlockInfo(241,"pink glazed terracota", true, false, false, false);
+		blocks[242] = new BlockInfo(242,"gray glazed terracota", true, false, false, false);
+		blocks[243] = new BlockInfo(243,"lightgray glazed terracota", true, false, false, false);
+		blocks[244] = new BlockInfo(244,"cyan glazed terracota", true, false, false, false);
+		blocks[245] = new BlockInfo(245,"purple glazed terracota", true, false, false, false);
+		blocks[246] = new BlockInfo(246,"blue glazed terracota", true, false, false, false);
+		blocks[247] = new BlockInfo(247,"brown glazed terracota", true, false, false, false);
+		blocks[248] = new BlockInfo(248,"green glazed terracota", true, false, false, false);
+		blocks[249] = new BlockInfo(249,"red glazed terracota", true, false, false, false);
+		blocks[250] = new BlockInfo(250,"black glazed terracota", true, false, false, false);
+		blocks[251] = new BlockInfo(251,"concrete", true, false, false, false);
+		blocks[252] = new BlockInfo(252,"concrete powder", true, false, false, false);
+		blocks[255] = new BlockInfo(255,"structure block", true, false, true, false);
 		
 		//bed
 		blocks[26].cardinalDirections = new byte[] {1, 2, 3, 0};
@@ -220,6 +276,7 @@ public class BlocksInfo {
 		blocks[136].cardinalDirections = new byte[] {1, 3, 0, 2};
 		blocks[156].cardinalDirections = new byte[] {1, 3, 0, 2};
 		blocks[180].cardinalDirections = new byte[] {1, 3, 0, 2};
+		blocks[203].cardinalDirections = new byte[] {1, 3, 0, 2};
 		
 		//sign
 		//blocks[63].cardinalDirections = new byte[] {4, 2, 5, 3};

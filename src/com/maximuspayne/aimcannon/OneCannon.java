@@ -199,6 +199,7 @@ public class OneCannon{
 		    		tntp2 = (TNTPrimed)d.getWorld().spawnEntity(new Location(d.getWorld(), d.getX()+0.5, d.getY()+0.5, d.getZ()+0.5), EntityType.PRIMED_TNT);
 
 		    		tntp3 = (TNTPrimed)b.getWorld().spawnEntity(new Location(b.getWorld(), b.getX()+0.5, b.getY()+0.5, b.getZ()+0.5), EntityType.PRIMED_TNT);
+		    		
 		    		NavyCraft.shotTNTList.put(tntp.getUniqueId(), p);
 		    		NavyCraft.shotTNTList.put(tntp2.getUniqueId(), p);
 		    		NavyCraft.shotTNTList.put(tntp3.getUniqueId(), p);
@@ -268,6 +269,7 @@ public class OneCannon{
 		    if (direction == BlockFace.WEST) {
 			if (look.getX() > -0.5)
 			    look.setX(-0.5);
+			if (look.getY() < 0.05)
 				look.setY(0.05);
 			if (look.getZ() > 0.5)
 			    look.setZ(0.5);
@@ -277,6 +279,7 @@ public class OneCannon{
 		    if (direction == BlockFace.NORTH) {
 			if (look.getZ() > -0.5)
 			    look.setZ(-0.5);
+			if (look.getY() < 0.05)
 				look.setY(0.05);
 			if (look.getX() > 0.5)
 			    look.setX(0.5);
@@ -286,6 +289,7 @@ public class OneCannon{
 		    if (direction == BlockFace.EAST) {
 			if (look.getX() < 0.5)
 			    look.setX(0.5);
+			if (look.getY() < 0.05)
 				look.setY(0.05);
 			if (look.getZ() > 0.5)
 			    look.setZ(0.5);
@@ -295,6 +299,7 @@ public class OneCannon{
 		    if (direction == BlockFace.SOUTH) {
 			if (look.getZ() < 0.5)
 			    look.setZ(0.5);
+			if (look.getY() < 0.05)
 				look.setY(0.05);
 			if (look.getX() > 0.5)
 			    look.setX(0.5);
@@ -635,7 +640,6 @@ public class OneCannon{
 			    	else	
 			    		c.setType(Material.WATER);
 	    		}
-	    		//projectile.
 	    		
 		    	Block d = b.getRelative((int)x2, (int)y2, (int)z2);
 		    	if( d.getY() > 60 )
@@ -648,7 +652,7 @@ public class OneCannon{
     }
 
     
-    @SuppressWarnings("deprecation")
+	@SuppressWarnings("deprecation")
 	public void colorTorpedoes()
     {
     	//color wool
@@ -686,14 +690,16 @@ public class OneCannon{
     	c = c.getRelative(direction,4);
     	d = d.getRelative(direction,4);
     	
-    	byte wool1;
-		byte wool2;
-		byte wool3;
-		byte wool4;
+    	Byte wool1;
+    	Byte wool2;
+    	Byte wool3;
+    	Byte wool4;
 		wool1 = 0xE;
 		wool2 = 0x8;
 		wool3 = 0x8;
 		wool4 = 0x7;
+		
+		
 		if( cannonType == 7 )
 		{
     		wool1 = 0x3;
@@ -702,12 +708,15 @@ public class OneCannon{
 			wool4 = 0x7;
 		}else if( cannonType == 8 )
 		{
-    		wool1 = 0x8;
+			wool1 = 0x8;
 			wool2 = 0x0;
 			wool3 = 0x0;
 			wool4 = 0x7;
 		}
-    	
+		
+
+		
+		
 		if( c.getTypeId() == 35 )
     		c.setTypeIdAndData(35, wool1, false);
     	if( c.getRelative(direction,-1).getTypeId() == 35 )
@@ -727,8 +736,7 @@ public class OneCannon{
     		d.getRelative(direction,-3).setTypeIdAndData(35, wool4, false);
 		
     	for( int i=0; i<4; i++ )
-    	{
-    		
+    	{	
     		
         	if( a.getTypeId() == 35 )
         		a.setTypeIdAndData(35, wool1, false);
@@ -747,6 +755,8 @@ public class OneCannon{
         		b.getRelative(direction,-2).setTypeIdAndData(35, wool3, false);
         	if( b.getRelative(direction,-3).getTypeId() == 35 )
         		b.getRelative(direction,-3).setTypeIdAndData(35, wool4, false);
+    		
+    		
         	
         	if( i == 0 || i == 2 )
         	{
@@ -1692,7 +1702,7 @@ public class OneCannon{
     	nc.getServer().getScheduler().scheduleSyncDelayedTask(nc, new Runnable(){
     	//new Thread() {
 	  //  @Override
-	    @SuppressWarnings({ "deprecation", "unused" })
+	    @SuppressWarnings({ "deprecation" })
 		public void run()
 	    {
 
@@ -1700,7 +1710,7 @@ public class OneCannon{
 	    	{
 		    	if( torp.warhead.getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -1).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -2).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -3).getTypeId() == 35 )
 		    	{
-		    		firingCraft.world.playSound(torp.warhead.getLocation(), Sound.ENTITY_PLAYER_BREATH, 2.0f, 0.8f);
+		    		torp.warhead.getWorld().playSound(torp.warhead.getLocation(), Sound.ENTITY_PLAYER_BREATH, 2.0f, 0.8f);
 		    		
 					if( i > 15 )
 					{
@@ -2439,7 +2449,7 @@ public class OneCannon{
     	nc.getServer().getScheduler().scheduleSyncDelayedTask(nc, new Runnable(){
     	//new Thread() {
 	  //  @Override
-	    @SuppressWarnings({ "deprecation", "unused" })
+	    @SuppressWarnings({ "deprecation" })
 		public void run()
 	    {
 	    	//getServer().getScheduler().scheduleAsyncDelayedTask(this, new Runnable() {
@@ -2451,7 +2461,7 @@ public class OneCannon{
 	    	{
 		    	if( torp.warhead.getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -1).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -2).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -3).getTypeId() == 35 )
 		    	{
-		    		firingCraft.world.playSound(torp.warhead.getLocation(), Sound.ENTITY_PLAYER_BREATH, 2.0f, 0.8f);
+		    		torp.warhead.getWorld().playSound(torp.warhead.getLocation(), Sound.ENTITY_PLAYER_BREATH, 2.0f, 0.8f);
 					if( i > 15 )
 					{
 						if( torp.warhead.getY() > 62 )
@@ -3181,7 +3191,7 @@ public class OneCannon{
     	nc.getServer().getScheduler().scheduleSyncDelayedTask(nc, new Runnable(){
     	//new Thread() {
 	  //  @Override
-	    @SuppressWarnings({ "deprecation", "unused" })
+	    @SuppressWarnings({ "deprecation" })
 		public void run()
 	    {
 
@@ -3189,7 +3199,7 @@ public class OneCannon{
 	    	{
 		    	if( torp.warhead.getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -1).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -2).getTypeId() == 35 && torp.warhead.getRelative(torp.hdg, -3).getTypeId() == 35 )
 		    	{
-		    		firingCraft.world.playSound(torp.warhead.getLocation(), Sound.ENTITY_PLAYER_BREATH, 2.0f, 0.8f);
+		    		torp.warhead.getWorld().playSound(torp.warhead.getLocation(), Sound.ENTITY_PLAYER_BREATH, 2.0f, 0.8f);
 					if( i > 15 )
 					{
 						if( torp.warhead.getY() > 62 )
@@ -3207,7 +3217,7 @@ public class OneCannon{
 			    		}
 						
 						//check sub update
-						if( firingCraft.tubeFiringMode.containsKey(torp.tubeNum) )
+						if( firingCraft != null && firingCraft.tubeFiringMode.containsKey(torp.tubeNum) )
 						{
 							if( firingCraft.tubeFiringDepth.get(torp.tubeNum) != torp.setDepth )
 							{
@@ -3330,13 +3340,15 @@ public class OneCannon{
 									torp.warhead.getRelative(torp.hdg, -3).setType(Material.WATER);
 								}
 								p.sendMessage("Torpedo expired.");
-								firingCraft.tubeFiringMode.put(torp.tubeNum, -2);
-								firingCraft.tubeFiringDepth.put(torp.tubeNum, 1);
-								firingCraft.tubeFiringArm.put(torp.tubeNum, 20);
-								firingCraft.tubeFiringArmed.put(torp.tubeNum, false);
-								firingCraft.tubeFiringHeading.put(torp.tubeNum, firingCraft.rotation);
-								firingCraft.tubeFiringAuto.put(torp.tubeNum, true);
-								firingCraft.tubeFiringDisplay.put(torp.tubeNum, 0);
+								if( firingCraft != null ) {
+									firingCraft.tubeFiringMode.put(torp.tubeNum, -2);
+									firingCraft.tubeFiringDepth.put(torp.tubeNum, 1);
+									firingCraft.tubeFiringArm.put(torp.tubeNum, 20);
+									firingCraft.tubeFiringArmed.put(torp.tubeNum, false);
+									firingCraft.tubeFiringHeading.put(torp.tubeNum, firingCraft.rotation);
+									firingCraft.tubeFiringAuto.put(torp.tubeNum, true);
+									firingCraft.tubeFiringDisplay.put(torp.tubeNum, 0);
+								}
 								return;
 							}
 		    				
@@ -3389,25 +3401,29 @@ public class OneCannon{
 							else
 								p.sendMessage("Torpedo hit " + checkCraft.name + "!");
 							
-							firingCraft.tubeFiringMode.put(torp.tubeNum, -2);
-							firingCraft.tubeFiringDepth.put(torp.tubeNum, 1);
-							firingCraft.tubeFiringArm.put(torp.tubeNum, 20);
-							firingCraft.tubeFiringArmed.put(torp.tubeNum, false);
-							firingCraft.tubeFiringHeading.put(torp.tubeNum, firingCraft.rotation);
-							firingCraft.tubeFiringAuto.put(torp.tubeNum, true);
-							firingCraft.tubeFiringDisplay.put(torp.tubeNum, 0);
+							if( firingCraft != null ) {
+								firingCraft.tubeFiringMode.put(torp.tubeNum, -2);
+								firingCraft.tubeFiringDepth.put(torp.tubeNum, 1);
+								firingCraft.tubeFiringArm.put(torp.tubeNum, 20);
+								firingCraft.tubeFiringArmed.put(torp.tubeNum, false);
+								firingCraft.tubeFiringHeading.put(torp.tubeNum, firingCraft.rotation);
+								firingCraft.tubeFiringAuto.put(torp.tubeNum, true);
+								firingCraft.tubeFiringDisplay.put(torp.tubeNum, 0);
+							}
 							//CraftMover cm = new CraftMover( firingCraft, plugin);
 							//cm.structureUpdate(null);
 						}else
 						{
 							p.sendMessage("Torpedo Dud (Inactive).");
-							firingCraft.tubeFiringMode.put(torp.tubeNum, -2);
-							firingCraft.tubeFiringDepth.put(torp.tubeNum, 1);
-							firingCraft.tubeFiringArm.put(torp.tubeNum, 20);
-							firingCraft.tubeFiringArmed.put(torp.tubeNum, false);
-							firingCraft.tubeFiringHeading.put(torp.tubeNum, firingCraft.rotation);
-							firingCraft.tubeFiringAuto.put(torp.tubeNum, true);
-							firingCraft.tubeFiringDisplay.put(torp.tubeNum, 0);
+							if( firingCraft != null ) {
+								firingCraft.tubeFiringMode.put(torp.tubeNum, -2);
+								firingCraft.tubeFiringDepth.put(torp.tubeNum, 1);
+								firingCraft.tubeFiringArm.put(torp.tubeNum, 20);
+								firingCraft.tubeFiringArmed.put(torp.tubeNum, false);
+								firingCraft.tubeFiringHeading.put(torp.tubeNum, firingCraft.rotation);
+								firingCraft.tubeFiringAuto.put(torp.tubeNum, true);
+								firingCraft.tubeFiringDisplay.put(torp.tubeNum, 0);
+							}
 							//CraftMover cm = new CraftMover( firingCraft, plugin);
 							//cm.structureUpdate(null);
 						}
@@ -3460,15 +3476,15 @@ public class OneCannon{
 						{
 							p.sendMessage("Dud Torpedo! Too close...");
 							torp.dead=true;
-							firingCraft.tubeFiringMode.put(torp.tubeNum, -2);
-							firingCraft.tubeFiringDepth.put(torp.tubeNum, 1);
-							firingCraft.tubeFiringArm.put(torp.tubeNum, 20);
-							firingCraft.tubeFiringArmed.put(torp.tubeNum, false);
-							firingCraft.tubeFiringHeading.put(torp.tubeNum, firingCraft.rotation);
-							firingCraft.tubeFiringAuto.put(torp.tubeNum, true);
-							firingCraft.tubeFiringDisplay.put(torp.tubeNum, 0);
-							if( firingCraft != null )
-							{
+							if( firingCraft != null ) {
+								firingCraft.tubeFiringMode.put(torp.tubeNum, -2);
+								firingCraft.tubeFiringDepth.put(torp.tubeNum, 1);
+								firingCraft.tubeFiringArm.put(torp.tubeNum, 20);
+								firingCraft.tubeFiringArmed.put(torp.tubeNum, false);
+								firingCraft.tubeFiringHeading.put(torp.tubeNum, firingCraft.rotation);
+								firingCraft.tubeFiringAuto.put(torp.tubeNum, true);
+								firingCraft.tubeFiringDisplay.put(torp.tubeNum, 0);
+								
 								firingCraft.waitTorpLoading--;
 								if( left )
 									leftLoading = false;
@@ -3563,7 +3579,7 @@ public class OneCannon{
 						if( !leftLoading && !rightLoading && !checkOuterDoorClosed() )
 							openTorpedoDoors(p, false, false);
 					}
-		    		if( firingCraft.tubeFiringMode.get(torp.tubeNum) == -3 )
+		    		if( firingCraft != null && firingCraft.tubeFiringMode.get(torp.tubeNum) == -3 )
 		    		{
 			    		firingCraft.tubeFiringMode.put(torp.tubeNum, -2);
 						firingCraft.tubeFiringDepth.put(torp.tubeNum, 1);
